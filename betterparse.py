@@ -24,7 +24,7 @@ _split_re = re.compile(r'''
     (?:([a-z][a-z0-9+\-.]*):)?  # scheme
     (?://                       # authority
         (?:([^/?\#@\[\]]*)@)?   # userinfo
-        ([^/?\#]*)              # host:port
+        ([^/?\#]*)()            # host:port
     )?
     ([^?\#]*)                   # path
     \??([^\#]*)                 # query
@@ -39,7 +39,8 @@ class URL(URLBase):
     def __new__(cls, url=None, scheme='', host='', path='', query='',
                 fragment='', userinfo='', port=''):
         if url is not None:
-            (scheme, userinfo, host,
+            # All other arguments are ignored.
+            (scheme, userinfo, host, port,
              path, query, fragment) = _split_re(url).groups('')
 
             # We can not match port number in regexp. Host itself can contain
@@ -57,10 +58,10 @@ class URL(URLBase):
 
         # | Although host is case-insensitive, producers and normalizers
         # | should use lowercase for registered names and hexadecimal
-        # |addresses for the sake of uniformity.
-        # TODO: | while only using uppercase letters for percent-encodings
+        # | addresses for the sake of uniformity.
+        # TODO: while only using uppercase letters for percent-encodings
         host = host.lower()
 
         return tuple.__new__(cls, (scheme, host, path, query, fragment,
-                                   userinfo, port))
+                                   userinfo, str(port)))
 
