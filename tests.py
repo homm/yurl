@@ -66,7 +66,13 @@ class SplitTests(unittest.TestCase):
         pass
 
     def test_fragment_valid(self):
-        pass
+        self.one_try('#frag', '', '', '', '', 'frag')
+        self.one_try('//host#frag', '', 'host', '', '', 'frag')
+        self.one_try('//host/path#frag', '', 'host', '/path', '', 'frag')
+        self.one_try('//host?query#frag', '', 'host', '', 'query', 'frag')
+        self.one_try('#?query', '', '', '', '', '?query')
+        self.one_try('//ho#st/path?query', '', 'ho', '', '', 'st/path?query')
+        self.one_try('#a://b:c@d.e/f?g#h', '', '', '', '', 'a://b:c@d.e/f?g#h')
 
     def test_fragment_invalid(self):
         pass
