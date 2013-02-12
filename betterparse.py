@@ -21,7 +21,11 @@ import re
 #
 _split_re = re.compile(r'''
     (?:([a-z][a-z0-9+\-.]*):)?  # scheme
-    (?://([^/?\#]*))?           # netloc
+    (?://                       # authority
+        ([^/?\#@\[\]]*@)?       # userinfo
+        ([^/?\#]*)              # host
+        (?::(\d*))?             # port
+    )?
     ([^?\#]*)                   # path
     \??([^\#]*)                 # query
     \#?(.*)                     # fragment
