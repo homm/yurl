@@ -3,7 +3,7 @@ import unittest
 from betterparse import URL
 
 
-class SplitTests(unittest.TestCase):
+class ParseTests(unittest.TestCase):
     def one_try(self, url, scheme='', host='', path='', query='', fragment='',
                 userinfo='', port=''):
         splitted = (scheme, host, path, query, fragment, userinfo, port)
@@ -97,6 +97,36 @@ class SplitTests(unittest.TestCase):
         self.one_try('?#frag', fragment='frag')
         self.one_try('/path#', '', '', '/path')
         self.one_try('#')
+
+
+class BenchmarkTest(unittest.TestCase):
+
+    def setUp(self):
+        from timeit import repeat
+        setup0 = ('from urllib.parse import urlparse, urlsplit\n'
+                  'from betterparse import URL\n')
+        self.test = lambda stmt, setup='': min(repeat(stmt, setup0 + setup,
+                                                      number=10**3))
+
+    def one_try(self, url, setup, first, second):
+        first = self.test(first, setup) * 1000
+        second = self.test(second, setup) * 1000
+        print('{:6.5} {:6.5}  {}  {}'.format(
+            first, second,
+            '!warning' if first > second else '',
+            url
+        ))
+
+    def test_parse(self):
+        for url in ['https://user:info@yandex.ru:8080/path/to+the=ar?gum=ent#s',
+                    'scheme:8080/path/to;the=ar?gum=ent#s',
+                    'lucky-number:3456',
+                    '//host:80']:
+            setup = "i = 0; url={}".format(repr(url))
+            self.one_try(url, setup,
+                         "URL(url + str(i)); i+=1",
+                         "urlsplit(url + str(i)); i+=1")
+
 
 if __name__ == '__main__':
     unittest.main()
