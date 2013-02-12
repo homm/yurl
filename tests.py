@@ -60,17 +60,20 @@ class SplitTests(unittest.TestCase):
         pass
 
     def test_query_valid(self):
-        pass
+        self.one_try('?query', '', '', '', 'query')
+        self.one_try('//host?query', '', 'host', '', 'query')
+        self.one_try('//host/path?query', '', 'host', '/path', 'query')
+        self.one_try('//ho?st/path?query', '', 'ho', '', 'st/path?query')
+        self.one_try('?a://b:c@d.e/f?g#h', '', '', '', 'a://b:c@d.e/f?g', 'h')
 
     def test_query_invalid(self):
-        pass
+        self.one_try('#?query', '', '', '', '', '?query')
 
     def test_fragment_valid(self):
         self.one_try('#frag', '', '', '', '', 'frag')
         self.one_try('//host#frag', '', 'host', '', '', 'frag')
         self.one_try('//host/path#frag', '', 'host', '/path', '', 'frag')
         self.one_try('//host?query#frag', '', 'host', '', 'query', 'frag')
-        self.one_try('#?query', '', '', '', '', '?query')
         self.one_try('//ho#st/path?query', '', 'ho', '', '', 'st/path?query')
         self.one_try('#a://b:c@d.e/f?g#h', '', '', '', '', 'a://b:c@d.e/f?g#h')
 
@@ -91,6 +94,7 @@ class SplitTests(unittest.TestCase):
         self.one_try('/path', '', '', '/path')
         self.one_try('/path?', '', '', '/path')
         self.one_try('?')
+        self.one_try('?#frag', fragment='frag')
         self.one_try('/path#', '', '', '/path')
         self.one_try('#')
 
