@@ -31,9 +31,9 @@ _split_re = re.compile(r'''
     \#?(.*)                     # fragment
     ''', re.VERBOSE | re.IGNORECASE | re.DOTALL).match
 
-URLBase = namedtuple('URLBase', 'scheme host path query fragment userinfo port')
+URLTuple = namedtuple('URLBase', 'scheme host path query fragment userinfo port')
 
-class URL(URLBase):
+class URL(URLTuple):
     __slots__ = ()
 
     def __new__(cls, url=None, scheme='', host='', path='', query='',
@@ -64,4 +64,3 @@ class URL(URLBase):
 
         return tuple.__new__(cls, (scheme, host, path, query, fragment,
                                    userinfo, str(port)))
-
