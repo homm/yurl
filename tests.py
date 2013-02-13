@@ -180,6 +180,26 @@ class BenchmarkTests(unittest.TestCase):
                          "URL(url + str(i)); i+=1",
                          "urlsplit(url + str(i)); i+=1")
 
+    def test_pickle(self):
+        print('\n=== Test pickle ===')
+        for url in self.test_urls:
+            setup = ("import pickle\n"
+                     "yurl = URL({0})\n"
+                     "parsed = urlsplit({0})\n").format(repr(url))
+            self.one_try(url, setup,
+                         "pickle.dumps(yurl)",
+                         "pickle.dumps(parsed)")
+
+    def test_unpickle(self):
+        print('\n=== Test unpickle ===')
+        for url in self.test_urls:
+            setup = ("import pickle\n"
+                     "yurl = pickle.dumps(URL({0}))\n"
+                     "parsed = pickle.dumps(urlsplit({0}))\n").format(repr(url))
+            self.one_try(url, setup,
+                         "pickle.loads(yurl)",
+                         "pickle.loads(parsed)")
+
 
 if __name__ == '__main__':
     if '-bench' in sys.argv:
