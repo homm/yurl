@@ -1,3 +1,4 @@
+import sys
 import unittest
 
 from yurl import URL
@@ -15,14 +16,14 @@ class ParseTests(unittest.TestCase):
         self.assertEqual(URL(None, *splitted), splitted)
         self.assertEqual(URL(None, *URL(url)), splitted)
 
-        if urlsplit:
+        if urlsplit and '-v' in sys.argv:
             if userinfo:
                 host = userinfo + '@' + host
             if port:
                 host += ':' + port
             splitted = (scheme, host, path, query, fragment)
             if self.split(url) != splitted:
-                print('urllib issue:', url, self.split(url))
+                print('\n  urllib issue:', url, self.split(url))
 
     def test_scheme_valid(self):
         self.one_try('scheme:path', 'scheme', '', 'path')
@@ -149,7 +150,13 @@ class InterfaceTests(unittest.TestCase):
         self.assertEqual(pickle.loads(dump), URL('a://b:c@d:5/f?g#h'))
 
 
+@unittest.skipUnless('-bench' in sys.argv, "run with -bench arg")
 class BenchmarkTests(unittest.TestCase):
+    test_urls = ['https://user:info@yandex.ru:8080/path/to+the=ar?gum=ent#s',
+                 'scheme:8080/path/to;the=ar?gum=ent#s',
+                 'lucky-number:3456',
+                 '//host:80']
+
     def setUp(self):
         from timeit import repeat
         setup0 = ('from urllib.parse import urlparse, urlsplit\n'
@@ -160,21 +167,21 @@ class BenchmarkTests(unittest.TestCase):
     def one_try(self, url, setup, *tests):
         results = [self.test(test, setup) * 1000 for test in tests]
 
-        print(end=' ', *['{:6.5}'.format(result) for result in results])
+        print(end=' ', *['{:6.4}'.format(result) for result in results])
         if results[0] > min(results[1:]):
             print('!warning', end='')
         print(' ', url)
 
     def test_parse(self):
-        for url in ['https://user:info@yandex.ru:8080/path/to+the=ar?gum=ent#s',
-                    'scheme:8080/path/to;the=ar?gum=ent#s',
-                    'lucky-number:3456',
-                    '//host:80']:
-            setup = "i = 0; url={}".format(repr(url))
+        print('\n=== Test parse ===')
+        for url in self.test_urls:
+            setup = "i = 0; url = {}".format(repr(url))
             self.one_try(url, setup,
                          "URL(url + str(i)); i+=1",
                          "urlsplit(url + str(i)); i+=1")
 
 
 if __name__ == '__main__':
+    if '-bench' in sys.argv:
+        sys.argv.remove('-bench')
     unittest.main()
