@@ -64,3 +64,10 @@ class URL(URLTuple):
 
         return tuple.__new__(cls, (scheme, host, path, query, fragment,
                                    userinfo, str(port)))
+
+    def __reduce__(self):
+        return (_restore_state, (type(self),) + tuple(self))
+
+
+def _restore_state(type, *args):
+    return type(None, *args)

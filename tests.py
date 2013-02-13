@@ -143,6 +143,11 @@ class InterfaceTests(unittest.TestCase):
             self.assertTrue(url == tuple(url))
             self.assertEqual(hash(url), hash(tuple(url)))
 
+    def test_pickling(self):
+        import pickle
+        dump = pickle.dumps(URL('a://b:c@d:5/f?g#h'))
+        self.assertEqual(pickle.loads(dump), URL('a://b:c@d:5/f?g#h'))
+
 
 class BenchmarkTests(unittest.TestCase):
     def setUp(self):
