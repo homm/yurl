@@ -157,14 +157,13 @@ class BenchmarkTests(unittest.TestCase):
         self.test = lambda stmt, setup='': min(repeat(stmt, setup0 + setup,
                                                       number=10**3))
 
-    def one_try(self, url, setup, first, second):
-        first = self.test(first, setup) * 1000
-        second = self.test(second, setup) * 1000
-        print('{:6.5} {:6.5}  {}  {}'.format(
-            first, second,
-            '!warning' if first > second else '',
-            url
-        ))
+    def one_try(self, url, setup, *tests):
+        results = [self.test(test, setup) * 1000 for test in tests]
+
+        print(end=' ', *['{:6.5}'.format(result) for result in results])
+        if results[0] > min(results[1:]):
+            print('!warning', end='')
+        print(' ', url)
 
     def test_parse(self):
         for url in ['https://user:info@yandex.ru:8080/path/to+the=ar?gum=ent#s',
