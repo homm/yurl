@@ -112,8 +112,39 @@ class ParseTests(unittest.TestCase):
         self.one_try('#')
 
 
-class BenchmarkTest(unittest.TestCase):
+class InterfaceTests(unittest.TestCase):
+    def test_constructor(self):
+        # args
+        self.assertEqual(URL('a://b:c@d:5/f?g#h'),
+                         URL(None, 'a', 'd', '/f', 'g', 'h', 'b:c', '5'))
+        # kwargs
+        self.assertEqual(URL('a://b:c@d:5/f?g#h'),
+                         URL(scheme='a', userinfo='b:c', host='d', port='5',
+                             path='/f', query='g', fragment='h'))
+        # ignore
+        self.assertEqual(URL('//host'), URL('//host', scheme='sh', port='80'))
+        # port convert
+        self.assertEqual(URL(port=80), URL(port='80'))
+        self.assertEqual(URL(None, 'SCHEME', 'HOST'),
+                         URL(None, 'scheme', 'host'))
 
+    def test_add(self):
+        return
+        self.assertEqual(URL('http://google.com/docs') + '/search?q=WAT',
+                         URL('http://google.com/search?q=WAT'))
+        self.assertEqual(URL('http://google.com/docs') + URL('/search?q=WAT'),
+                         URL('http://google.com/search?q=WAT'))
+
+
+    def test_hashable(self):
+        for url in [URL(), URL('a://b:c@d:5/f?g#h')]:
+            hash(url)
+            # assertEqual lies
+            self.assertTrue(url == tuple(url))
+            self.assertEqual(hash(url), hash(tuple(url)))
+
+
+class BenchmarkTests(unittest.TestCase):
     def setUp(self):
         from timeit import repeat
         setup0 = ('from urllib.parse import urlparse, urlsplit\n'
