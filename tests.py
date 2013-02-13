@@ -4,12 +4,25 @@ from betterparse import URL
 
 
 class ParseTests(unittest.TestCase):
+    def setUp(self):
+        from urllib.parse import urlsplit
+        self.split = urlsplit
+
     def one_try(self, url, scheme='', host='', path='', query='', fragment='',
-                userinfo='', port=''):
+                userinfo='', port='', urlsplit=True):
         splitted = (scheme, host, path, query, fragment, userinfo, port)
         self.assertEqual(URL(url), splitted)
         self.assertEqual(URL(None, *splitted), splitted)
         self.assertEqual(URL(None, *URL(url)), splitted)
+
+        if urlsplit:
+            if userinfo:
+                host = userinfo + '@' + host
+            if port:
+                host += ':' + port
+            splitted = (scheme, host, path, query, fragment)
+            if self.split(url) != splitted:
+                print('urllib issue:', url, self.split(url))
 
     def test_scheme_valid(self):
         self.one_try('scheme:path', 'scheme', '', 'path')
@@ -29,7 +42,6 @@ class ParseTests(unittest.TestCase):
         self.one_try('//host/path', '', 'host', '/path')
         self.one_try('//host+path', '', 'host+path', '')
         self.one_try('//host', '', 'host', '')
-        self.one_try('//HOST', '', 'host', '')
         self.one_try('//this+is$also&host!', '', 'this+is$also&host!', '')
 
     def test_host_invalid(self):
@@ -81,14 +93,15 @@ class ParseTests(unittest.TestCase):
         pass
 
     def test_case_sensitivity(self):
-        self.one_try('A://B:C@D.E/F?G#H', 'a', 'd.e', '/F', 'G', 'H', 'B:C')
+        self.one_try('A://B:C@D.E/F?G#H', 'a', 'd.e', '/F', 'G', 'H', 'B:C',
+                     urlsplit=False)
 
     def test_strip_empty_parts(self):
-        self.one_try('//@:?#')
+        self.one_try('//@:?#', urlsplit=False)
         self.one_try('///path', '', '', '/path')
-        self.one_try('//@host', '', 'host')
-        self.one_try('//host:', '', 'host')
-        self.one_try('//host:/', '', 'host', '/')
+        self.one_try('//@host', '', 'host', urlsplit=False)
+        self.one_try('//host:', '', 'host', urlsplit=False)
+        self.one_try('//host:/', '', 'host', '/', urlsplit=False)
         self.one_try('/', '', '', '/')
         self.one_try('path', '', '', 'path')
         self.one_try('/path', '', '', '/path')
