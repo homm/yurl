@@ -1,6 +1,6 @@
 import unittest
 
-from betterparse import URL
+from yurl import URL
 
 
 class ParseTests(unittest.TestCase):
@@ -153,7 +153,7 @@ class BenchmarkTests(unittest.TestCase):
     def setUp(self):
         from timeit import repeat
         setup0 = ('from urllib.parse import urlparse, urlsplit\n'
-                  'from betterparse import URL\n')
+                  'from yurl import URL\n')
         self.test = lambda stmt, setup='': min(repeat(stmt, setup0 + setup,
                                                       number=10**3))
 

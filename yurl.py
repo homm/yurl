@@ -68,6 +68,13 @@ class URL(URLTuple):
     def __reduce__(self):
         return (_restore_state, (type(self),) + tuple(self))
 
+    def __add__(self, other):
+        if not isinstance(other, URLTuple):
+            other = type(self)(other)
+
+    def replace(self, scheme='', host='', path='', query='',
+                fragment='', userinfo='', port=''):
+        return URL()
 
 def _restore_state(type, *args):
     return type(None, *args)
