@@ -65,6 +65,20 @@ class URL(URLTuple):
         return tuple.__new__(cls, (scheme, host, path, query, fragment,
                                    userinfo, str(port)))
 
+    def __str__(self):
+        base = self.authority
+
+        if base:
+            base = '//' + base
+            if self.path and not self.path.startswith('/'):
+                base += '/'
+
+        if self.scheme:
+            base = self.scheme + ':' + base
+
+        return base + self.full_path
+
+
     def __reduce__(self):
         return type(self), (None,) + tuple(self)
 

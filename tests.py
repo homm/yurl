@@ -74,6 +74,7 @@ class ParseTests(unittest.TestCase):
 
     def test_query_valid(self):
         self.one_try('?query', '', '', '', 'query')
+        self.one_try('http:?query', 'http', '', '', 'query')
         self.one_try('//host?query', '', 'host', '', 'query')
         self.one_try('//host/path?query', '', 'host', '/path', 'query')
         self.one_try('//ho?st/path?query', '', 'ho', '', 'st/path?query')
@@ -84,6 +85,7 @@ class ParseTests(unittest.TestCase):
 
     def test_fragment_valid(self):
         self.one_try('#frag', '', '', '', '', 'frag')
+        self.one_try('http:#frag', 'http', '', '', '', 'frag')
         self.one_try('//host#frag', '', 'host', '', '', 'frag')
         self.one_try('//host/path#frag', '', 'host', '/path', '', 'frag')
         self.one_try('//host?query#frag', '', 'host', '', 'query', 'frag')
@@ -129,8 +131,8 @@ class InterfaceTests(unittest.TestCase):
         self.assertEqual(URL(None, 'SCHEME', 'HOST'),
                          URL(None, 'scheme', 'host'))
 
+    @unittest.skip('not implemented')
     def test_add(self):
-        return
         self.assertEqual(URL('http://google.com/docs') + '/search?q=WAT',
                          URL('http://google.com/search?q=WAT'))
         self.assertEqual(URL('http://google.com/docs') + URL('/search?q=WAT'),
@@ -159,6 +161,15 @@ class InterfaceTests(unittest.TestCase):
                     'path?query#fragment', '?query', '#fragment',
                     '?query#fragment']:
             self.assertEqual(URL(url).full_path, url)
+
+    def test_str(self):
+        for url in ['', '//host', 'scheme://host', '//host/path',
+                    '?query', 'path?query', 'http:', 'http:?query',
+                    '//host?query']:
+            self.assertEqual(str(URL(url)), url)
+            self.assertEqual(URL(str(URL(url))), URL(url))
+        # should append slash to path
+        self.assertEqual(str(URL(host='host', path='path')), '//host/path')
 
 
 @unittest.skipUnless('-bench' in sys.argv, "run with -bench arg")
