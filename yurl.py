@@ -110,19 +110,15 @@ class URL(URLTuple):
             if host or userinfo or port:
                 raise TypeError()
 
-            authority = type(self)('//' + authority)
-            host = authority.host
-            userinfo = authority.userinfo
-            port = authority.port
+            # Use original URL just for parse.
+            _, host, _, _, _, userinfo, port = URL('//' + authority)
 
         if full_path is not None:
             if path or query or fragment:
                 raise TypeError()
 
-            full_path = type(self)(full_path)
-            path = full_path.path
-            query = full_path.query
-            fragment = full_path.fragment
+            # Use original URL just for parse.
+            path, query, fragment = URL(full_path)[2:5]
 
         return type(self)(None,
                           self.scheme if scheme is None else scheme,

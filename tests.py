@@ -162,7 +162,7 @@ class InterfaceTests(unittest.TestCase):
             self.assertEqual(URL(url).full_path, url)
 
     def test_str(self):
-        for url in ['', '//host', 'scheme://host', '//host/path',
+        for url in ['', '//host', '//host/' 'scheme://host', '//host/path',
                     '?query', 'path?query', 'http:', 'http:?query',
                     '//host?query']:
             self.assertEqual(str(URL(url)), url)
@@ -182,6 +182,27 @@ class InterfaceTests(unittest.TestCase):
                 self.assertEqual(url.replace(**{field: 'some'})[idx], 'some')
                 # clear
                 self.assertEqual(url.replace(**{field: ''})[idx], '')
+
+        for url, authority in [(URL('a://b:c@d:5/f?g#h'), 'blah'),
+                               (URL('a://blah/f?g#h'), '')]:
+            orig_autho = url.authority
+            url = url.replace(authority=authority)
+            self.assertEqual(url.authority, authority)
+            url = url.replace(authority=orig_autho)
+            self.assertEqual(url.authority, orig_autho)
+
+        for url, full_path in [(URL('a://b:c@d:5/f?g#h'), ''),
+                               (URL('a://b:c@d:5/f?g#h'), '/path'),
+                               (URL('a://b:c@d:5/f?g#h'), '/path?qr'),
+                               (URL('a://b:c@d:5/f?g#h'), '?qr'),
+                               (URL('a://b:c@d:5/f?g#h'), '?qr#fr'),
+                               (URL('a://b:c@d:5/f?g#h'), '#fr'),
+                               (URL('a://b:c@d:5'), '/path'),]:
+            orig_path = url.full_path
+            url = url.replace(full_path=full_path)
+            self.assertEqual(url.full_path, full_path)
+            url = url.replace(full_path=orig_path)
+            self.assertEqual(url.full_path, orig_path)
 
 
 @unittest.skipUnless('-bench' in sys.argv, "run with -bench arg")
