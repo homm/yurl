@@ -149,6 +149,17 @@ class InterfaceTests(unittest.TestCase):
         dump = pickle.dumps(URL('a://b:c@d:5/f?g#h'))
         self.assertEqual(pickle.loads(dump), URL('a://b:c@d:5/f?g#h'))
 
+    def test_authority(self):
+        for url in ['','ya.ru', 'ya.ru:80', ':80', 'info@ya.ru',
+                    'info@', 'info@:80']:
+            self.assertEqual(URL('//' + url).authority, url)
+
+    def test_full_path(self):
+        for url in ['', 'path', 'path?query', 'path#fragment',
+                    'path?query#fragment', '?query', '#fragment',
+                    '?query#fragment']:
+            self.assertEqual(URL(url).full_path, url)
+
 
 @unittest.skipUnless('-bench' in sys.argv, "run with -bench arg")
 class BenchmarkTests(unittest.TestCase):

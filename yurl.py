@@ -72,6 +72,20 @@ class URL(URLTuple):
         if not isinstance(other, URLTuple):
             other = type(self)(other)
 
-    def replace(self, scheme='', host='', path='', query='',
-                fragment='', userinfo='', port=''):
-        return URL()
+    @property
+    def authority(self):
+        authority = self.host
+        if self.port:
+            authority += ':' + self.port
+        if self.userinfo:
+            return self.userinfo + '@' + authority
+        return authority
+
+    @property
+    def full_path(self):
+        path = self.path
+        if self.query:
+            path += '?' + self.query
+        if self.fragment:
+            path += '#' + self.fragment
+        return path
