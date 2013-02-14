@@ -173,7 +173,7 @@ class InterfaceTests(unittest.TestCase):
     def test_replace(self):
         for url in [URL('htttp://user@google.com:8080/path?query#fragment'),
                     URL(), URL('path'), URL('//host').replace(port=80)]:
-            self.assertFalse(url is url.replace())
+            self.assertFalse(url is url.replace(host='strange'))
             self.assertEqual(url, url.replace())
             for idx, (field, value) in enumerate(zip(url._fields, url)):
                 # replase to same
@@ -182,6 +182,11 @@ class InterfaceTests(unittest.TestCase):
                 self.assertEqual(url.replace(**{field: 'some'})[idx], 'some')
                 # clear
                 self.assertEqual(url.replace(**{field: ''})[idx], '')
+
+        self.assertEqual(
+            URL().replace('SCHEME', 'HOST', '/PATH', '', '', 'AUTH', 30),
+            ('scheme', 'host', '/PATH', '', '', 'AUTH', '30')
+        )
 
         for url, authority in [(URL('a://b:c@d:5/f?g#h'), 'blah'),
                                (URL('a://blah/f?g#h'), '')]:

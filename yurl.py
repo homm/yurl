@@ -120,11 +120,12 @@ class URL(URLTuple):
             # Use original URL just for parse.
             path, query, fragment = URL(full_path)[2:5]
 
-        return type(self)(None,
-                          self.scheme if scheme is None else scheme,
-                          self.host if host is None else host,
-                          self.path if path is None else path,
-                          self.query if query is None else query,
-                          self.fragment if fragment is None else fragment,
-                          self.userinfo if userinfo is None else userinfo,
-                          self.port if port is None else port)
+        return tuple.__new__(type(self), (
+            self.scheme if scheme is None else scheme.lower(),
+            self.host if host is None else host.lower(),
+            self.path if path is None else path,
+            self.query if query is None else query,
+            self.fragment if fragment is None else fragment,
+            self.userinfo if userinfo is None else userinfo,
+            self.port if port is None else str(port),
+        ))
