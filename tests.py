@@ -229,7 +229,7 @@ class BenchmarkTests(unittest.TestCase):
     def setUp(self):
         from timeit import repeat
         setup0 = ('from urllib.parse import urlparse, urlsplit\n'
-                  'from yurl import URL\n')
+                  'from yurl import URL, CachedURL\n')
         self.test = lambda stmt, setup='': min(repeat(stmt, setup0 + setup,
                                                       number=10**3))
 
@@ -248,11 +248,11 @@ class BenchmarkTests(unittest.TestCase):
             self.one_try(url, setup,
                          "URL(url + str(i)); i+=1",
                          "urlsplit(url + str(i)); i+=1")
-        print('== with cache ==')
+        print('  = with cache =')
         for url in self.test_urls:
             setup = "i = 0; url = {}".format(repr(url))
             self.one_try(url, setup,
-                         "URL(url + str(i % 20)); i+=1",
+                         "CachedURL(url + str(i % 20)); i+=1",
                          "urlsplit(url + str(i % 20)); i+=1")
 
     def test_pickle(self):

@@ -143,3 +143,26 @@ class URL(URLTuple):
             other.userinfo or self.userinfo,
             other.port or self.port,
         ))
+
+
+class CachedURL(URL):
+    __slots__ = ()
+    _cache = {}
+    _cache_size = 20
+
+    def __new__(cls, url=None, *args, **kwargs):
+        # Cache only when parsing.
+        if url is None:
+            return URL.__new__(cls, None, *args, **kwargs)
+
+        self = cls._cache.get(url)
+
+        if self is None:
+            if len(cls._cache) >= cls._cache_size:
+                cls._cache.clear()
+
+            # Construct and store.
+            self = URL.__new__(cls, url)
+            cls._cache[url] = self
+
+        return self
