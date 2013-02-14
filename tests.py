@@ -66,15 +66,19 @@ class ParseTests(unittest.TestCase):
         self.one_try('//host:22:no/path', '', 'host:22:no', '/path')
         self.one_try('//host:-80/path', '', 'host:-80', '/path')
 
+    @unittest.skip('not ready')
     def test_userinfo_valid(self):
         pass
 
+    @unittest.skip('not ready')
     def test_userinfo_invalid(self):
         pass
 
+    @unittest.skip('not ready')
     def test_path_valid(self):
         pass
 
+    @unittest.skip('not ready')
     def test_path_invalid(self):
         pass
 
@@ -98,7 +102,7 @@ class ParseTests(unittest.TestCase):
         self.one_try('//ho#st/path?query', '', 'ho', '', '', 'st/path?query')
         self.one_try('#a://b:c@d.e/f?g#h', '', '', '', '', 'a://b:c@d.e/f?g#h')
 
-    def test_fragment_invalid(self):
+    def _test_fragment_invalid(self):
         "Fragment always valid"
         pass
 
