@@ -138,7 +138,6 @@ class InterfaceTests(unittest.TestCase):
         self.assertEqual(URL('http://google.com/docs') + URL('/search?q=WAT'),
                          URL('http://google.com/search?q=WAT'))
 
-
     def test_hashable(self):
         for url in [URL(), URL('a://b:c@d:5/f?g#h')]:
             hash(url)
@@ -170,6 +169,19 @@ class InterfaceTests(unittest.TestCase):
             self.assertEqual(URL(str(URL(url))), URL(url))
         # should append slash to path
         self.assertEqual(str(URL(host='host', path='path')), '//host/path')
+
+    def test_replace(self):
+        for url in [URL('htttp://user@google.com:8080/path?query#fragment'),
+                    URL(), URL('path'), URL('//host').replace(port=80)]:
+            self.assertFalse(url is url.replace())
+            self.assertEqual(url, url.replace())
+            for idx, (field, value) in enumerate(zip(url._fields, url)):
+                # replase to same
+                self.assertEqual(url.replace(**{field: value}), url)
+                # replace to some
+                self.assertEqual(url.replace(**{field: 'some'})[idx], 'some')
+                # clear
+                self.assertEqual(url.replace(**{field: ''})[idx], '')
 
 
 @unittest.skipUnless('-bench' in sys.argv, "run with -bench arg")

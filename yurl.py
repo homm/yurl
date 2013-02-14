@@ -78,7 +78,6 @@ class URL(URLTuple):
 
         return base + self.full_path
 
-
     def __reduce__(self):
         return type(self), (None,) + tuple(self)
 
@@ -103,3 +102,33 @@ class URL(URLTuple):
         if self.fragment:
             path += '#' + self.fragment
         return path
+
+    def replace(self, scheme=None, host=None, path=None, query=None,
+                fragment=None, userinfo=None, port=None, authority=None,
+                full_path=None):
+        if authority is not None:
+            if host or userinfo or port:
+                raise TypeError()
+
+            authority = type(self)('//' + authority)
+            host = authority.host
+            userinfo = authority.userinfo
+            port = authority.port
+
+        if full_path is not None:
+            if path or query or fragment:
+                raise TypeError()
+
+            full_path = type(self)(full_path)
+            path = full_path.path
+            query = full_path.query
+            fragment = full_path.fragment
+
+        return type(self)(None,
+                          self.scheme if scheme is None else scheme,
+                          self.host if host is None else host,
+                          self.path if path is None else path,
+                          self.query if query is None else query,
+                          self.fragment if fragment is None else fragment,
+                          self.userinfo if userinfo is None else userinfo,
+                          self.port if port is None else port)
