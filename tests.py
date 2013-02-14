@@ -201,6 +201,12 @@ class BenchmarkTests(unittest.TestCase):
             self.one_try(url, setup,
                          "URL(url + str(i)); i+=1",
                          "urlsplit(url + str(i)); i+=1")
+        print('== with cache ==')
+        for url in self.test_urls:
+            setup = "i = 0; url = {}".format(repr(url))
+            self.one_try(url, setup,
+                         "URL(url + str(i % 20)); i+=1",
+                         "urlsplit(url + str(i % 20)); i+=1")
 
     def test_pickle(self):
         print('\n=== Test pickle ===')
