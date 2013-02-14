@@ -209,6 +209,15 @@ class InterfaceTests(unittest.TestCase):
             url = url.replace(full_path=orig_path)
             self.assertEqual(url.full_path, orig_path)
 
+    def test_replace_from(self):
+        full_url = URL('scheme://user@host:80/path?query#frgment')
+        for url in ['an://oth@er:33/full?url#!!', '/simple/path', 'scm:']:
+            self.assertEqual(URL(url).replace_from(full_url), full_url)
+
+        self.assertEqual(full_url.replace_from(URL('scm:')).scheme, 'scm')
+        self.assertEqual(full_url.replace_from(URL('//hst')).host, 'hst')
+        self.assertEqual(full_url.replace_from(URL('/pth')).path, '/pth')
+
 
 @unittest.skipUnless('-bench' in sys.argv, "run with -bench arg")
 class BenchmarkTests(unittest.TestCase):

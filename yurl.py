@@ -129,3 +129,17 @@ class URL(URLTuple):
             self.userinfo if userinfo is None else userinfo,
             self.port if port is None else str(port),
         ))
+
+    def replace_from(self, other):
+        if not isinstance(other, URLTuple):
+            other = type(self)(other)
+
+        return tuple.__new__(type(self), (
+            other.scheme or self.scheme,
+            other.host or self.host,
+            other.path or self.path,
+            other.query or self.query,
+            other.fragment or self.fragment,
+            other.userinfo or self.userinfo,
+            other.port or self.port,
+        ))
