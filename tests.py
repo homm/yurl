@@ -1,3 +1,6 @@
+# coding: utf-8
+
+from __future__ import print_function, unicode_literals
 import sys
 import unittest
 
@@ -6,7 +9,10 @@ from yurl import URL
 
 class ParseTests(unittest.TestCase):
     def setUp(self):
-        from urllib.parse import urlsplit
+        try:
+            from urllib.parse import urlsplit
+        except ImportError:
+            from urlparse import urlsplit
         self.split = urlsplit
 
     def one_try(self, url, scheme='', host='', path='', query='', fragment='',
@@ -93,6 +99,7 @@ class ParseTests(unittest.TestCase):
         self.one_try('#a://b:c@d.e/f?g#h', '', '', '', '', 'a://b:c@d.e/f?g#h')
 
     def test_fragment_invalid(self):
+        "Fragment always valid"
         pass
 
     def test_case_sensitivity(self):
@@ -130,6 +137,12 @@ class InterfaceTests(unittest.TestCase):
         self.assertEqual(URL(port=80), URL(port='80'))
         self.assertEqual(URL(None, 'SCHEME', 'HOST'),
                          URL(None, 'scheme', 'host'))
+
+    def test_unicode(self):
+        url = (URL('http://пользователь@домен.ком/путь?запрос#фрагмент')
+               .replace(path='другой', fragment='третий'))
+        # Convert to string.
+        '{0}{1}{2}'.format(url.authority, url.full_path, url)
 
     @unittest.skip('not implemented')
     def test_add(self):
@@ -228,8 +241,13 @@ class BenchmarkTests(unittest.TestCase):
 
     def setUp(self):
         from timeit import repeat
-        setup0 = ('from urllib.parse import urlparse, urlsplit\n'
-                  'from yurl import URL, CachedURL\n')
+        setup0 = 'from yurl import URL, CachedURL\n'
+        try:
+            import urllib.parse
+        except ImportError:
+            setup0 += 'from urlparse import urlparse, urlsplit\n'
+        else:
+            setup0 += 'from urllib.parse import urlparse, urlsplit\n'
         self.test = lambda stmt, setup='': min(repeat(stmt, setup0 + setup,
                                                       number=10**3))
 
@@ -258,7 +276,8 @@ class BenchmarkTests(unittest.TestCase):
     def test_pickle(self):
         print('\n=== Test pickle ===')
         for url in self.test_urls:
-            setup = ("import pickle\n"
+            setup = ("try:\n  import cPickle as pickle\n"
+                     "except ImportError:\n  import pickle\n"
                      "yurl = URL({0})\n"
                      "parsed = urlsplit({0})\n").format(repr(url))
             self.one_try(url, setup,
@@ -268,7 +287,8 @@ class BenchmarkTests(unittest.TestCase):
     def test_unpickle(self):
         print('\n=== Test unpickle ===')
         for url in self.test_urls:
-            setup = ("import pickle\n"
+            setup = ("try:\n  import cPickle as pickle\n"
+                     "except ImportError:\n  import pickle\n"
                      "yurl = pickle.dumps(URL({0}))\n"
                      "parsed = pickle.dumps(urlsplit({0}))\n").format(repr(url))
             self.one_try(url, setup,

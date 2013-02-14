@@ -65,7 +65,7 @@ class URL(URLTuple):
         return tuple.__new__(cls, (scheme, host, path, query, fragment,
                                    userinfo, str(port)))
 
-    def __str__(self):
+    def __unicode__(self):
         base = self.authority
 
         if base:
@@ -143,6 +143,17 @@ class URL(URLTuple):
             other.userinfo or self.userinfo,
             other.port or self.port,
         ))
+
+    # Python 2 to 3 compatibility.
+    # Rename __unicode__ function to __str__ in python 3.
+    # Convert unicode to bytes in python 2.
+    import sys
+    if sys.version_info > (3, 0):
+        __str__ = __unicode__
+        del __unicode__
+    else:
+        __str__ = lambda self: self.__unicode__().encode('utf-8')
+    del sys
 
 
 class CachedURL(URL):
