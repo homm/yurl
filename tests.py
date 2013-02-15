@@ -2,7 +2,10 @@
 
 from __future__ import print_function, unicode_literals
 import sys
-import unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 
 from yurl import URL
 
@@ -273,7 +276,7 @@ class BenchmarkTests(unittest.TestCase):
     def one_try(self, url, setup, *tests):
         results = [self.test(test, setup) * 1000 for test in tests]
 
-        print(end=' ', *['{:6.4}'.format(result) for result in results])
+        print(end=' ', *['{0:6.4}'.format(result) for result in results])
         if results[0] > min(results[1:]):
             print('!warning', end='')
         print(' ', url)
@@ -281,13 +284,13 @@ class BenchmarkTests(unittest.TestCase):
     def test_parse(self):
         print('\n=== Test parse ===')
         for url in self.test_urls:
-            setup = "i = 0; url = {}".format(repr(url))
+            setup = "i = 0; url = {0}".format(repr(url))
             self.one_try(url, setup,
                          "URL(url + str(i)); i+=1",
                          "urlsplit(url + str(i)); i+=1")
         print('  = with cache =')
         for url in self.test_urls:
-            setup = "i = 0; url = {}".format(repr(url))
+            setup = "i = 0; url = {0}".format(repr(url))
             self.one_try(url, setup,
                          "CachedURL(url + str(i % 20)); i+=1",
                          "urlsplit(url + str(i % 20)); i+=1")
