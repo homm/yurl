@@ -235,6 +235,21 @@ class InterfaceTests(unittest.TestCase):
         self.assertEqual(full_url.replace_from(URL('//hst')).host, 'hst')
         self.assertEqual(full_url.replace_from(URL('/pth')).path, '/pth')
 
+    def test_setdefault(self):
+        empty = URL()
+        full1 = URL('scheme://user@host:80/path?query#frgment')
+        full2 = URL('an://oth@er:33/full?url#!!')
+
+        self.assertEqual(empty.setdefault(*full1), full1)
+        self.assertEqual(full1.setdefault(*full2), full1)
+
+        for idx, (field, value) in enumerate(zip(full1._fields, full1)):
+            self.assertEqual(empty.setdefault(**{field: value}),
+                             empty.replace(**{field: value}))
+            self.assertEqual(empty.setdefault(**{field: value})[idx], value)
+            self.assertEqual(full2.setdefault(**{field: value})[idx],
+                             full2[idx])
+
 
 @unittest.skipUnless('-bench' in sys.argv, "run with -bench arg")
 class BenchmarkTests(unittest.TestCase):

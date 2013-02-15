@@ -146,6 +146,18 @@ class URL(URLTuple):
             other.port or self.port,
         ))
 
+    def setdefault(self, scheme='', host='', path='', query='', fragment='',
+                   userinfo='', port=''):
+        return tuple.__new__(type(self), (
+            self.scheme or scheme.lower(),
+            self.host or host.lower(),
+            self.path or path,
+            self.query or query,
+            self.fragment or fragment,
+            self.userinfo or userinfo,
+            self.port or str(port),
+        ))
+
     # Python 2 to 3 compatibility.
     # Rename __unicode__ function to __str__ in python 3.
     # Convert unicode to bytes in python 2.
