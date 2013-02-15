@@ -78,6 +78,8 @@ class URL(URLTuple):
 
         return base + self.full_path
 
+    as_string = __unicode__
+
     def __reduce__(self):
         return type(self), (None,) + tuple(self)
 
