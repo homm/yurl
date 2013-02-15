@@ -106,6 +106,19 @@ class URL(URLTuple):
             path += '#' + self.fragment
         return path
 
+    ### Information and validation
+
+    def is_relative(self):
+        # In terms of rfc relative url have not scheme.
+        # See is_relative_path().
+        return not self.scheme
+
+    def is_relative_path(self):
+        # Absolute path always starts with slash. Also paths with authority
+        # can not be relative.
+        return not self.path.startswith('/') and not (
+            self.host or self.userinfo or self.port)
+
     ### Manipulation
 
     def __add__(self, other):
