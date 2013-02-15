@@ -66,6 +66,8 @@ class URL(URLTuple):
         return tuple.__new__(cls, (scheme, host, path, query, fragment,
                                    userinfo, str(port)))
 
+    ### Serialization
+
     def __unicode__(self):
         base = self.authority
 
@@ -84,9 +86,7 @@ class URL(URLTuple):
     def __reduce__(self):
         return type(self), (None,) + tuple(self)
 
-    def __add__(self, other):
-        if not isinstance(other, URLTuple):
-            other = type(self)(other)
+    ### Missing properties
 
     @property
     def authority(self):
@@ -105,6 +105,12 @@ class URL(URLTuple):
         if self.fragment:
             path += '#' + self.fragment
         return path
+
+    ### Manipulation
+
+    def __add__(self, other):
+        if not isinstance(other, URLTuple):
+            other = type(self)(other)
 
     def replace(self, scheme=None, host=None, path=None, query=None,
                 fragment=None, userinfo=None, port=None, authority=None,
@@ -159,14 +165,15 @@ class URL(URLTuple):
             self.port or str(port),
         ))
 
-    # Python 2 to 3 compatibility.
-    # Rename __unicode__ function to __str__ in python 3.
-    # Convert unicode to bytes in python 2.
+    ### Python 2 to 3 compatibility
+
     import sys
     if sys.version_info > (3, 0):
+        # Rename __unicode__ function to __str__ in python 3.
         __str__ = __unicode__
         del __unicode__
     else:
+        # Convert unicode to bytes in python 2.
         __str__ = lambda self: self.__unicode__().encode('utf-8')
     del sys
 
