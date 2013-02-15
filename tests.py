@@ -36,6 +36,7 @@ class ParseTests(unittest.TestCase):
 
     def test_scheme_valid(self):
         self.one_try('scheme:path', 'scheme', '', 'path')
+        self.one_try('scheme:path:other', 'scheme', '', 'path:other')
         self.one_try('allow+chars-33.:path', 'allow+chars-33.', '', 'path')
         self.one_try('simple:', 'simple', '', '')
         self.one_try('google.com:80', 'google.com', '', '80')
@@ -57,6 +58,7 @@ class ParseTests(unittest.TestCase):
     def test_host_invalid(self):
         self.one_try('scheme:/host/path', 'scheme', '', '/host/path')
         self.one_try('scheme:///host/path', 'scheme', '', '/host/path')
+        self.one_try('scheme//host/path', '', '', 'scheme//host/path')
 
     def test_port_valid(self):
         self.one_try('//host:80/path', '', 'host', '/path', port='80')
@@ -69,13 +71,17 @@ class ParseTests(unittest.TestCase):
         self.one_try('//host:22:no/path', '', 'host:22:no', '/path')
         self.one_try('//host:-80/path', '', 'host:-80', '/path')
 
-    @unittest.skip('not ready')
     def test_userinfo_valid(self):
-        pass
+        self.one_try('sch://user@host/', 'sch', 'host', '/', '', '', 'user')
+        self.one_try('//user:pas@', userinfo='user:pas')
+        self.one_try('//user:pas:and:more@', userinfo='user:pas:and:more')
+        self.one_try('//:user:@', userinfo=':user:')
+        self.one_try("//!($&')*+,;=@", userinfo="!($&')*+,;=")
+        self.one_try('//user@info@ya.ru', '', 'info@ya.ru', userinfo='user')
 
-    @unittest.skip('not ready')
     def test_userinfo_invalid(self):
-        pass
+        # is it better then raise in .validate()?
+        self.one_try('//[some]@host', '', '[some]@host')
 
     @unittest.skip('not ready')
     def test_path_valid(self):
