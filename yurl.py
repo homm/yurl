@@ -27,7 +27,7 @@ class URL(URLTuple):
     __slots__ = ()
 
     # This is not validating regexp.
-    # It splits url to unambiguous parts defined in RFC.
+    # It splits url to unambiguous parts according RFC.
     _split_re = re.compile(r'''
         (?:([^:/?#]+):)?            # scheme
         (?://                       # authority
@@ -124,7 +124,7 @@ class URL(URLTuple):
     ### Information and validation
 
     def is_relative(self):
-        # In terms of rfc relative url have not scheme.
+        # In terms of rfc relative url have no scheme.
         # See is_relative_path().
         return not self.scheme
 
@@ -132,7 +132,7 @@ class URL(URLTuple):
         # Absolute path always starts with slash. Also paths with authority
         # can not be relative.
         return not self.path.startswith('/') and not (
-            self.host or self.userinfo or self.port)
+            self.scheme or self.host or self.userinfo or self.port)
 
     _valid_scheme_re = re.compile(r'^[a-z][a-z0-9+\-.]*$').match
     # '[' and ']' the only chars not allowed in userinfo and not delimiters

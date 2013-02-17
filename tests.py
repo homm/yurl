@@ -259,6 +259,17 @@ class InterfaceTests(unittest.TestCase):
             self.assertEqual(full2.setdefault(**{field: value})[idx],
                              full2[idx])
 
+    def test_test(self):
+        def test(url, relative, relative_path):
+            self.assertEqual(URL(url).is_relative(), relative)
+            self.assertEqual(URL(url).is_relative_path(), relative_path)
+        test('sc:', False, False)
+        test('sc:path/', False, False)
+        test('//host', True, False)
+        test('/path', True, False)
+        test('path/', True, True)
+        test('./path/', True, True)
+
 
 @unittest.skipUnless('-bench' in sys.argv, "run with -bench arg")
 class BenchmarkTests(unittest.TestCase):
