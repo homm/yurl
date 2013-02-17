@@ -292,19 +292,23 @@ class BenchmarkTests(unittest.TestCase):
         setup0 = 'from yurl import URL, CachedURL\n'
         try:
             import urllib.parse
+            setup0 += 'from urllib.parse import urlparse, urlsplit\n'
         except ImportError:
             setup0 += 'from urlparse import urlparse, urlsplit\n'
-        else:
-            setup0 += 'from urllib.parse import urlparse, urlsplit\n'
+        try:
+            import cPickle
+            setup0 += 'import cPickle as pickle\n'
+        except ImportError:
+            setup0 += 'import pickle\n'
         self.test = lambda stmt, setup='': min(repeat(stmt, setup0 + setup,
-                                                      number=10**3))
+                                                      number=5000))
 
     def one_try(self, url, setup, *tests):
         results = [self.test(test, setup) * 1000 for test in tests]
 
         print(end=' ', *['{0:6.4}'.format(result) for result in results])
         if results[0] > min(results[1:]):
-            print('!warning', end='')
+            print('!worse', end='')
         print(' ', url)
 
     def test_parse(self):
@@ -321,12 +325,19 @@ class BenchmarkTests(unittest.TestCase):
                          "CachedURL(url + str(i % 20)); i+=1",
                          "urlsplit(url + str(i % 20)); i+=1")
 
+    def test_concat(self):
+        print('\n=== Test as_string ===')
+        for url in self.test_urls:
+            setup = ("yurl = URL({0})\n"
+                     "parsed = urlsplit({0})\n").format(repr(url))
+            self.one_try(url, setup,
+                         "yurl.as_string()",
+                         "parsed.geturl()")
+
     def test_pickle(self):
         print('\n=== Test pickle ===')
         for url in self.test_urls:
-            setup = ("try:\n  import cPickle as pickle\n"
-                     "except ImportError:\n  import pickle\n"
-                     "yurl = URL({0})\n"
+            setup = ("yurl = URL({0})\n"
                      "parsed = urlsplit({0})\n").format(repr(url))
             self.one_try(url, setup,
                          "pickle.dumps(yurl)",
@@ -335,9 +346,7 @@ class BenchmarkTests(unittest.TestCase):
     def test_unpickle(self):
         print('\n=== Test unpickle ===')
         for url in self.test_urls:
-            setup = (("try:\n  import cPickle as pickle\n"
-                      "except ImportError:\n  import pickle\n"
-                      "yurl = pickle.dumps(URL({0}))\n"
+            setup = (("yurl = pickle.dumps(URL({0}))\n"
                       "parsed = pickle.dumps(urlsplit({0}))\n")
                      .format(repr(url)))
             self.one_try(url, setup,

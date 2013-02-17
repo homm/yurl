@@ -74,25 +74,25 @@ class URL(URLTuple):
 
     def __unicode__(self):
         base = self.authority
+        path = self.path
 
         if base:
             base = '//' + base
 
-            # Url with authority can not have
-            if self.path and not self.path.startswith('/'):
+            # Url with authority can not be relative.
+            if path and path[0] != '/':
                 base += '/'
 
         # Escape paths with slashes by adding explicit empty host.
-        elif self.path.startswith('//'):
+        elif path[0:2] == '//':
             base = '//'
 
         if self.scheme:
             base = self.scheme + ':' + base
 
         # if url starts with path
-        elif not base:
-            if ':' in self.path.partition('/')[0]:
-                base = './'
+        elif not base and ':' in path.partition('/')[0]:
+            base = './'
 
         return base + self.full_path
 
