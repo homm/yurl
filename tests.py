@@ -19,11 +19,17 @@ class ParseTests(unittest.TestCase):
         self.split = urlsplit
 
     def one_try(self, url, scheme='', host='', path='', query='', fragment='',
-                userinfo='', port='', urlsplit=True):
+                userinfo='', port='', valid=True, urlsplit=True):
+        url = URL(url)
         splitted = (scheme, host, path, query, fragment, userinfo, port)
-        self.assertEqual(URL(url), splitted)
+        self.assertEqual(url, splitted)
         self.assertEqual(URL(None, *splitted), splitted)
-        self.assertEqual(URL(None, *URL(url)), splitted)
+        self.assertEqual(URL(None, *url), splitted)
+
+        # if valid:
+        #     url.validate()
+        # else:
+        #     self.assertRaises(ValueError, url.validate)
 
         if urlsplit and '-v' in sys.argv:
             if userinfo:
@@ -34,6 +40,9 @@ class ParseTests(unittest.TestCase):
             if self.split(url) != splitted:
                 print('\n  urllib issue:', url, self.split(url))
 
+    def one_try_invalid(self, *args, **kwargs):
+        self.one_try(valid=False, *args, **kwargs)
+
     def test_scheme_valid(self):
         self.one_try('scheme:path', 'scheme', '', 'path')
         self.one_try('scheme:path:other', 'scheme', '', 'path:other')
@@ -43,10 +52,10 @@ class ParseTests(unittest.TestCase):
         self.one_try('google.com:80/root', 'google.com', '', '80/root')
 
     def test_scheme_invalid(self):
-        self.one_try('not_a_cheme:path', '', '', 'not_a_cheme:path')
-        self.one_try('37signals:books', '', '', '37signals:books')
-        self.one_try(':realy-path', '', '', ':realy-path')
-        self.one_try('://even-this', '', '', '://even-this')
+        self.one_try_invalid('not_a_cheme:path', 'not_a_cheme', '', 'path')
+        self.one_try_invalid('37signals:books', '37signals', '', 'books')
+        self.one_try_invalid(':realy-path', '', '', ':realy-path')
+        self.one_try_invalid('://even-this', '', '', '://even-this')
 
     def test_host_valid(self):
         self.one_try('scheme://host/path', 'scheme', 'host', '/path')
@@ -80,8 +89,7 @@ class ParseTests(unittest.TestCase):
         self.one_try('//user@info@ya.ru', '', 'info@ya.ru', userinfo='user')
 
     def test_userinfo_invalid(self):
-        # is it better then raise in .validate()?
-        self.one_try('//[some]@host', '', '[some]@host')
+        self.one_try_invalid('//[some]@host', '', 'host', userinfo='[some]')
 
     @unittest.skip('not ready')
     def test_path_valid(self):
