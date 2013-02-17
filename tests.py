@@ -7,7 +7,9 @@ try:
 except ImportError:
     import unittest
 
-from yurl import URL
+from yurl import (URL, InvalidScheme as Scheme, InvalidUserinfo as Userinfo,
+                  InvalidHost as Host, InvalidPath as Path,
+                  InvalidQuery as Query)
 
 
 class ParseTests(unittest.TestCase):
@@ -19,98 +21,80 @@ class ParseTests(unittest.TestCase):
         self.split = urlsplit
 
     def one_try(self, url, scheme='', host='', path='', query='', fragment='',
-                userinfo='', port='', valid=True, urlsplit=True):
+                userinfo='', port='', invalid=None, urlsplit=True):
+        orih_url = url
         url = URL(url)
         splitted = (scheme, host, path, query, fragment, userinfo, port)
         self.assertEqual(url, splitted)
         self.assertEqual(URL(None, *splitted), splitted)
         self.assertEqual(URL(None, *url), splitted)
 
-        # if valid:
-        #     url.validate()
-        # else:
-        #     self.assertRaises(ValueError, url.validate)
+        if invalid:
+            self.assertRaises(invalid, url.validate)
+        else:
+            url.validate()
 
         if urlsplit and '-v' in sys.argv:
-            if userinfo:
-                host = userinfo + '@' + host
-            if port:
-                host += ':' + port
-            splitted = (scheme, host, path, query, fragment)
-            if self.split(url) != splitted:
-                print('\n  urllib issue:', url, self.split(url))
+            splitted = (scheme, url.authority, path, query, fragment)
+            if self.split(orih_url) != splitted:
+                print('\n  urllib issue:', orih_url, self.split(orih_url))
 
-    def one_try_invalid(self, *args, **kwargs):
-        self.one_try(valid=False, *args, **kwargs)
-
-    def test_scheme_valid(self):
+    def test_scheme(self):
         self.one_try('scheme:path', 'scheme', '', 'path')
         self.one_try('scheme:path:other', 'scheme', '', 'path:other')
         self.one_try('allow+chars-33.:path', 'allow+chars-33.', '', 'path')
         self.one_try('simple:', 'simple', '', '')
         self.one_try('google.com:80', 'google.com', '', '80')
         self.one_try('google.com:80/root', 'google.com', '', '80/root')
+        self.one_try('not_cheme:path', 'not_cheme', '', 'path', invalid=Scheme)
+        self.one_try('37signals:book', '37signals', '', 'book', invalid=Scheme)
+        self.one_try(':realy-path', '', '', ':realy-path')
+        self.one_try('://even-this', '', '', '://even-this')
 
-    def test_scheme_invalid(self):
-        self.one_try_invalid('not_a_cheme:path', 'not_a_cheme', '', 'path')
-        self.one_try_invalid('37signals:books', '37signals', '', 'books')
-        self.one_try_invalid(':realy-path', '', '', ':realy-path')
-        self.one_try_invalid('://even-this', '', '', '://even-this')
-
-    def test_host_valid(self):
+    def test_host(self):
         self.one_try('scheme://host/path', 'scheme', 'host', '/path')
         self.one_try('//host/path', '', 'host', '/path')
         self.one_try('//host+path', '', 'host+path', '')
         self.one_try('//host', '', 'host', '')
         self.one_try('//this+is$also&host!', '', 'this+is$also&host!', '')
-
-    def test_host_invalid(self):
         self.one_try('scheme:/host/path', 'scheme', '', '/host/path')
         self.one_try('scheme:///host/path', 'scheme', '', '/host/path')
         self.one_try('scheme//host/path', '', '', 'scheme//host/path')
 
-    def test_port_valid(self):
+    def test_port(self):
         self.one_try('//host:80/path', '', 'host', '/path', port='80')
-        self.one_try('//host:22:80/path', '', 'host:22', '/path', port='80')
         self.one_try('//host:80', '', 'host', port='80')
         self.one_try('//:80', port='80')
+        self.one_try('//h:22:80/', '', 'h:22', '/', port='80', invalid=Host)
+        self.one_try('//h:no/path', '', 'h:no', '/path', invalid=Host)
+        self.one_try('//h:22:no/path', '', 'h:22:no', '/path', invalid=Host)
+        self.one_try('//h:-80/path', '', 'h:-80', '/path', invalid=Host)
 
-    def test_port_invalid(self):
-        self.one_try('//host:no/path', '', 'host:no', '/path')
-        self.one_try('//host:22:no/path', '', 'host:22:no', '/path')
-        self.one_try('//host:-80/path', '', 'host:-80', '/path')
-
-    def test_userinfo_valid(self):
+    def test_userinfo(self):
         self.one_try('sch://user@host/', 'sch', 'host', '/', '', '', 'user')
         self.one_try('//user:pas@', userinfo='user:pas')
         self.one_try('//user:pas:and:more@', userinfo='user:pas:and:more')
         self.one_try('//:user:@', userinfo=':user:')
         self.one_try("//!($&')*+,;=@", userinfo="!($&')*+,;=")
-        self.one_try('//user@info@ya.ru', '', 'info@ya.ru', userinfo='user')
-
-    def test_userinfo_invalid(self):
-        self.one_try_invalid('//[some]@host', '', 'host', userinfo='[some]')
-
-    @unittest.skip('not ready')
-    def test_path_valid(self):
-        pass
+        self.one_try('//user@info@ya.ru', '', 'info@ya.ru', userinfo='user',
+                     invalid=Host)
+        self.one_try('//[some]@host', '', 'host', userinfo='[some]',
+                     invalid=Userinfo)
 
     @unittest.skip('not ready')
-    def test_path_invalid(self):
+    def test_path(self):
         pass
 
-    def test_query_valid(self):
+    def test_query(self):
         self.one_try('?query', '', '', '', 'query')
         self.one_try('http:?query', 'http', '', '', 'query')
         self.one_try('//host?query', '', 'host', '', 'query')
         self.one_try('//host/path?query', '', 'host', '/path', 'query')
         self.one_try('//ho?st/path?query', '', 'ho', '', 'st/path?query')
         self.one_try('?a://b:c@d.e/f?g#h', '', '', '', 'a://b:c@d.e/f?g', 'h')
-
-    def test_query_invalid(self):
         self.one_try('#?query', '', '', '', '', '?query')
 
-    def test_fragment_valid(self):
+    def test_fragment(self):
         self.one_try('#frag', '', '', '', '', 'frag')
         self.one_try('http:#frag', 'http', '', '', '', 'frag')
         self.one_try('//host#frag', '', 'host', '', '', 'frag')
@@ -118,10 +102,6 @@ class ParseTests(unittest.TestCase):
         self.one_try('//host?query#frag', '', 'host', '', 'query', 'frag')
         self.one_try('//ho#st/path?query', '', 'ho', '', '', 'st/path?query')
         self.one_try('#a://b:c@d.e/f?g#h', '', '', '', '', 'a://b:c@d.e/f?g#h')
-
-    def _test_fragment_invalid(self):
-        "Fragment always valid"
-        pass
 
     def test_case_sensitivity(self):
         self.one_try('A://B:C@D.E/F?G#H', 'a', 'd.e', '/F', 'G', 'H', 'B:C',
@@ -185,7 +165,7 @@ class InterfaceTests(unittest.TestCase):
         self.assertEqual(pickle.loads(dump), URL('a://b:c@d:5/f?g#h'))
 
     def test_authority(self):
-        for url in ['','ya.ru', 'ya.ru:80', ':80', 'info@ya.ru',
+        for url in ['', 'ya.ru', 'ya.ru:80', ':80', 'info@ya.ru',
                     'info@', 'info@:80']:
             self.assertEqual(URL('//' + url).authority, url)
 
@@ -236,7 +216,7 @@ class InterfaceTests(unittest.TestCase):
                                (URL('a://b:c@d:5/f?g#h'), '?qr'),
                                (URL('a://b:c@d:5/f?g#h'), '?qr#fr'),
                                (URL('a://b:c@d:5/f?g#h'), '#fr'),
-                               (URL('a://b:c@d:5'), '/path'),]:
+                               (URL('a://b:c@d:5'), '/path')]:
             orig_path = url.full_path
             url = url.replace(full_path=full_path)
             self.assertEqual(url.full_path, full_path)
@@ -323,10 +303,11 @@ class BenchmarkTests(unittest.TestCase):
     def test_unpickle(self):
         print('\n=== Test unpickle ===')
         for url in self.test_urls:
-            setup = ("try:\n  import cPickle as pickle\n"
-                     "except ImportError:\n  import pickle\n"
-                     "yurl = pickle.dumps(URL({0}))\n"
-                     "parsed = pickle.dumps(urlsplit({0}))\n").format(repr(url))
+            setup = (("try:\n  import cPickle as pickle\n"
+                      "except ImportError:\n  import pickle\n"
+                      "yurl = pickle.dumps(URL({0}))\n"
+                      "parsed = pickle.dumps(urlsplit({0}))\n")
+                     .format(repr(url)))
             self.one_try(url, setup,
                          "pickle.loads(yurl)",
                          "pickle.loads(parsed)")

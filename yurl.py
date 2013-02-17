@@ -4,9 +4,26 @@ from collections import namedtuple
 # This module based on rfc3986.
 
 
-URLTuple = namedtuple('URLBase', 'scheme host path query fragment userinfo port')
+# Validation errors.
+
+class InvalidScheme(ValueError): pass
+class InvalidAuthority(ValueError): pass
+class InvalidUserinfo(InvalidAuthority): pass
+class InvalidHost(InvalidAuthority): pass
+class InvalidPath(ValueError): pass
+class InvalidQuery(ValueError): pass
+
+
+URLTuple = namedtuple('URLBase', 'scheme host path query fragment '
+                                 'userinfo port')
+
 
 class URL(URLTuple):
+    """
+    Class for manipulation with escaped parts of url.
+    It can parse any url from string or can be constructed with provided parts.
+    If source of url not trusted, method validate() can be used to check url.
+    """
     __slots__ = ()
 
     # This is not validating regexp.
@@ -29,8 +46,10 @@ class URL(URLTuple):
             (scheme, userinfo, host, port,
              path, query, fragment) = cls._split_re(url).groups('')
 
-            # We can not match port number in regexp. Host itself can contain
-            # digits and ":"
+            # Host itself can contain digits and ':', so we cant use regexp.
+            # It is bit different from other behaviors: instead of splitting
+            # as is, and raise on validate, we split port only with digits.
+            # I believe this is expected behavior.
             _port_idx = host.rfind(':')
             if _port_idx >= 0:
                 _port = host[_port_idx + 1:]
@@ -103,6 +122,48 @@ class URL(URLTuple):
         # can not be relative.
         return not self.path.startswith('/') and not (
             self.host or self.userinfo or self.port)
+
+    _valid_scheme_re = re.compile(r'^[a-z][a-z0-9+\-.]*$').match
+    # '[' and ']' the only chars not allowed in userinfo and not delimiters
+    _valid_userinfo_re = re.compile(r'^[^/?\#@\[\]]+$').match
+    _valid_reg_name_re = re.compile(r'^[^/?\#@\[\]:]+$').match
+    _valid_path_re = re.compile(r'^[^?\#]+$').match
+    _valid_query_re = re.compile(r'^[^\#]+$').match
+
+    def validate(self):
+        if self.scheme:
+            if not self._valid_scheme_re(self.scheme):
+                raise InvalidScheme()
+
+        if self.userinfo:
+            if not self._valid_userinfo_re(self.userinfo):
+                raise InvalidUserinfo()
+
+        if self.host:
+            self.validate_host(self.host)
+
+        # Acording rfc there is two cases when path can be invalid:
+        # There should be no scheme and authority and first segment of path
+        # should contain ':' or starts with '//'. But this library not about
+        # punish user. We can escape this paths when formatting string.
+        if self.path:
+            if not self._valid_path_re(self.path):
+                raise InvalidPath()
+
+        if self.query:
+            if not self._valid_query_re(self.query):
+                raise InvalidQuery()
+
+        return self
+
+    @classmethod
+    def validate_host(cls, host):
+        if host.startswith('[') and host.endswith(']'):
+            # IP-literal
+            return
+
+        if not cls._valid_reg_name_re(host):
+            raise InvalidHost()
 
     ### Manipulation
 
