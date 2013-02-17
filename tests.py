@@ -36,8 +36,12 @@ class ParseTests(unittest.TestCase):
 
         if urlsplit and '-v' in sys.argv:
             splitted = (scheme, url.authority, path, query, fragment)
-            if self.split(orih_url) != splitted:
+            split_result = self.split(orih_url)
+            if split_result != splitted:
                 print('\n  urllib issue:', orih_url, self.split(orih_url))
+            elif (split_result.hostname or '') != host:
+                print('\n  urllib issue:', orih_url, 'host is:',
+                      split_result.hostname, 'host should:', host)
 
     def test_scheme(self):
         self.one_try('scheme:path', 'scheme', '', 'path')
@@ -114,11 +118,11 @@ class ParseTests(unittest.TestCase):
                      urlsplit=False)
 
     def test_strip_empty_parts(self):
-        self.one_try('//@:?#', urlsplit=False)
+        self.one_try('//@:?#')
         self.one_try('///path', '', '', '/path')
-        self.one_try('//@host', '', 'host', urlsplit=False)
-        self.one_try('//host:', '', 'host', urlsplit=False)
-        self.one_try('//host:/', '', 'host', '/', urlsplit=False)
+        self.one_try('//@host', '', 'host')
+        self.one_try('//host:', '', 'host')
+        self.one_try('//host:/', '', 'host', '/')
         self.one_try('/', '', '', '/')
         self.one_try('path', '', '', 'path')
         self.one_try('/path', '', '', '/path')
@@ -317,22 +321,34 @@ class BenchmarkTests(unittest.TestCase):
             setup = "i = 0; url = {0}".format(repr(url))
             self.one_try(url, setup,
                          "URL(url + str(i)); i+=1",
-                         "urlsplit(url + str(i)); i+=1")
+                         "urlsplit(url + str(i)); i+=1",
+                         "urlparse(url + str(i)); i+=1")
         print('  = with cache =')
         for url in self.test_urls:
             setup = "i = 0; url = {0}".format(repr(url))
             self.one_try(url, setup,
                          "CachedURL(url + str(i % 20)); i+=1",
-                         "urlsplit(url + str(i % 20)); i+=1")
+                         "urlsplit(url + str(i % 20)); i+=1",
+                         "urlparse(url + str(i % 20)); i+=1")
 
     def test_concat(self):
-        print('\n=== Test as_string ===')
+        print('\n=== Test as_string() ===')
         for url in self.test_urls:
             setup = ("yurl = URL({0})\n"
-                     "parsed = urlsplit({0})\n").format(repr(url))
+                     "splitted = urlsplit({0})\n"
+                     "parsed = urlparse({0})\n").format(repr(url))
             self.one_try(url, setup,
                          "yurl.as_string()",
+                         "splitted.geturl()",
                          "parsed.geturl()")
+
+        print('\n=== Test parse().as_string() ===')
+        for url in self.test_urls:
+            setup = "i = 0; url = {0}".format(repr(url))
+            self.one_try(url, setup,
+                         "URL(url + str(i)).as_string(); i+=1",
+                         "urlsplit(url + str(i)).geturl(); i+=1",
+                         "urlparse(url + str(i)).geturl(); i+=1")
 
     def test_pickle(self):
         print('\n=== Test pickle ===')
