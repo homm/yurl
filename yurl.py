@@ -106,19 +106,20 @@ class URL(URLTuple):
     @property
     def authority(self):
         authority = self.host
-        if self.port:
-            authority += ':' + self.port
-        if self.userinfo:
-            return self.userinfo + '@' + authority
+        userinfo, port = self[5:7]
+        if port:
+            authority += ':' + port
+        if userinfo:
+            return userinfo + '@' + authority
         return authority
 
     @property
     def full_path(self):
-        path = self.path
-        if self.query:
-            path += '?' + self.query
-        if self.fragment:
-            path += '#' + self.fragment
+        path, query, fragment = self[2:5]
+        if query:
+            path += '?' + query
+        if fragment:
+            path += '#' + fragment
         return path
 
     ### Information
