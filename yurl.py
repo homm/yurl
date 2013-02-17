@@ -121,7 +121,7 @@ class URL(URLTuple):
             path += '#' + self.fragment
         return path
 
-    ### Information and validation
+    ### Information
 
     def is_relative(self):
         # In terms of rfc relative url have no scheme.
@@ -133,6 +133,25 @@ class URL(URLTuple):
         # can not be relative.
         return not self.path.startswith('/') and not (
             self.scheme or self.host or self.userinfo or self.port)
+
+    def is_host_ipv4(self):
+        if not self.host.startswith('['):
+            parts = self.host.split('.')
+            if len(parts) == 4 and all(part.isdigit() for part in parts):
+                if all(int(part, 10) < 256 for part in parts):
+                    return True
+        return False
+
+    def is_host_ip(self):
+        if self.is_host_ipv4():
+            return True
+
+        if self.host.startswith('[') and self.host.endswith(']'):
+            return True
+
+        return False
+
+    ### Validation
 
     _valid_scheme_re = re.compile(r'^[a-z][a-z0-9+\-.]*$').match
     # '[' and ']' the only chars not allowed in userinfo and not delimiters

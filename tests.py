@@ -260,15 +260,24 @@ class InterfaceTests(unittest.TestCase):
                              full2[idx])
 
     def test_test(self):
-        def test(url, relative, relative_path):
+        def test_valid(url, relative, relative_path):
             self.assertEqual(URL(url).is_relative(), relative)
             self.assertEqual(URL(url).is_relative_path(), relative_path)
-        test('sc:', False, False)
-        test('sc:path/', False, False)
-        test('//host', True, False)
-        test('/path', True, False)
-        test('path/', True, True)
-        test('./path/', True, True)
+        test_valid('sc:', False, False)
+        test_valid('sc:path/', False, False)
+        test_valid('//host', True, False)
+        test_valid('/path', True, False)
+        test_valid('path/', True, True)
+        test_valid('./path/', True, True)
+
+        def test_ip(url, host_ip, host_ipv4):
+            self.assertEqual(URL(url).is_host_ip(), host_ip)
+            self.assertEqual(URL(url).is_host_ipv4(), host_ipv4)
+        test_ip('', False, False)
+        test_ip('//google/', False, False)
+        test_ip('//127.0.1', False, False)
+        test_ip('//127.0.0.1', True, True)
+        test_ip('//[127.0.0.1]', True, False)
 
 
 @unittest.skipUnless('-bench' in sys.argv, "run with -bench arg")
