@@ -124,6 +124,9 @@ class URL(URLTuple):
 
     ### Information
 
+    def __nonzero__(self):
+        return any(self)
+
     def is_relative(self):
         # In terms of rfc relative url have no scheme.
         # See is_relative_path().

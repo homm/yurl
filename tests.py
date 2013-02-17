@@ -283,6 +283,13 @@ class InterfaceTests(unittest.TestCase):
         test_ip('//127.0.0.1', True, True)
         test_ip('//[127.0.0.1]', True, False)
 
+        self.assertTrue(URL('/url'))
+        self.assertTrue(URL('url:'))
+        self.assertTrue(URL('//url'))
+        self.assertTrue(URL('?url'))
+        self.assertTrue(URL('#url'))
+        self.assertFalse(URL('//@:?#'))
+
 
 @unittest.skipUnless('-bench' in sys.argv, "run with -bench arg")
 class BenchmarkTests(unittest.TestCase):
