@@ -129,6 +129,14 @@ class URL(URLTuple):
     _valid_reg_name_re = re.compile(r'^[^/?\#@\[\]:]+$').match
     _valid_path_re = re.compile(r'^[^?\#]+$').match
     _valid_query_re = re.compile(r'^[^\#]+$').match
+    # This primitive regular expression not match complicated ip literal.
+    _valid_ip_literal_re = re.compile(r'''
+        ^(?:
+            v[a-f0-9]+\.[a-z0-9\-._~!$&'()*,;=:]+
+            |
+            [a-f0-9:\.]+
+        )$
+        ''', re.VERBOSE | re.IGNORECASE).match
 
     def validate(self):
         if self.scheme:
@@ -140,7 +148,14 @@ class URL(URLTuple):
                 raise InvalidUserinfo()
 
         if self.host:
-            self.validate_host(self.host)
+            host = self.host
+            if host.startswith('[') and host.endswith(']'):
+                if not self._valid_ip_literal_re(host[1:-1]):
+                    raise InvalidHost()
+
+            # valid ipv4 is also valid reg_name
+            elif not self._valid_reg_name_re(host):
+                raise InvalidHost()
 
         # Acording rfc there is two cases when path can be invalid:
         # There should be no scheme and authority and first segment of path
@@ -155,15 +170,6 @@ class URL(URLTuple):
                 raise InvalidQuery()
 
         return self
-
-    @classmethod
-    def validate_host(cls, host):
-        if host.startswith('[') and host.endswith(']'):
-            # IP-literal
-            return
-
-        if not cls._valid_reg_name_re(host):
-            raise InvalidHost()
 
     ### Manipulation
 

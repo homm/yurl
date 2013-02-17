@@ -60,6 +60,12 @@ class ParseTests(unittest.TestCase):
         self.one_try('scheme:/host/path', 'scheme', '', '/host/path')
         self.one_try('scheme:///host/path', 'scheme', '', '/host/path')
         self.one_try('scheme//host/path', '', '', 'scheme//host/path')
+        self.one_try('//127.0.0.1/', '', '127.0.0.1', '/')
+        self.one_try('//[127.0.0.1]/', '', '[127.0.0.1]', '/')
+        self.one_try('//[::1]/', '', '[::1]', '/')
+        self.one_try('//[-1]/', '', '[-1]', '/', invalid=Host)
+        self.one_try('//[v1.-1]/', '', '[v1.-1]', '/')
+        self.one_try('//v1.[::1]/', '', 'v1.[::1]', '/', invalid=Host)
 
     def test_port(self):
         self.one_try('//host:80/path', '', 'host', '/path', port='80')
