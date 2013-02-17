@@ -189,6 +189,12 @@ class InterfaceTests(unittest.TestCase):
             self.assertEqual(URL(str(URL(url))), URL(url))
         # should append slash to path
         self.assertEqual(str(URL(host='host', path='path')), '//host/path')
+        self.assertEqual(str(URL(host='host', path='//path')), '//host//path')
+        self.assertEqual(str(URL(path='//path').validate()), '////path')
+        self.assertEqual(str(URL(path='//pa:th').validate()), '////pa:th')
+        self.assertEqual(str(URL(path='pa:th').validate()), './pa:th')
+        self.assertEqual(str(URL(path='not/pa:th').validate()), 'not/pa:th')
+        self.assertEqual(str(URL(path='pa:th/not').validate()), './pa:th/not')
 
     def test_replace(self):
         for url in [URL('htttp://user@google.com:8080/path?query#fragment'),
