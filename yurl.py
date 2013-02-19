@@ -271,6 +271,9 @@ class URL(URLTuple):
         # Rename __unicode__ function to __str__ in python 3.
         __str__ = __unicode__
         del __unicode__
+        # Rename __nonzero__ function to __bool__ in python 3.
+        __bool__ = __nonzero__
+        del __nonzero__
     else:
         # Convert unicode to bytes in python 2.
         __str__ = lambda self: self.__unicode__().encode('utf-8')
