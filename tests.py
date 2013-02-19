@@ -155,12 +155,57 @@ class InterfaceTests(unittest.TestCase):
         # Convert to string.
         '{0}{1}{2}'.format(url.authority, url.full_path, url)
 
-    @unittest.skip('not implemented')
     def test_add(self):
-        self.assertEqual(URL('http://google.com/docs') + '/search?q=WAT',
-                         URL('http://google.com/search?q=WAT'))
-        self.assertEqual(URL('http://google.com/docs') + URL('/search?q=WAT'),
-                         URL('http://google.com/search?q=WAT'))
+        def test(base, rel, res):
+            self.assertEqual(str(URL(base) + URL(rel)), res)
+            self.assertEqual(str(URL(base) + rel), res)
+            self.assertEqual(str(base + URL(rel)), res)
+        # Tests from rfc "Normal Exaples"
+        for rel, res in [("g:h", "g:h"),
+                         ("g", "http://a/b/c/g"),
+                         ("./g", "http://a/b/c/g"),
+                         ("g/", "http://a/b/c/g/"),
+                         ("/g", "http://a/g"),
+                         ("//g", "http://g"),
+                         ("?y", "http://a/b/c/d;p?y"),
+                         ("g?y", "http://a/b/c/g?y"),
+                         ("#s", "http://a/b/c/d;p?q#s"),
+                         ("g#s", "http://a/b/c/g#s"),
+                         ("g?y#s", "http://a/b/c/g?y#s"),
+                         (";x", "http://a/b/c/;x"),
+                         ("g;x", "http://a/b/c/g;x"),
+                         ("g;x?y#s", "http://a/b/c/g;x?y#s"),
+                         ("", "http://a/b/c/d;p?q"),
+                         (".", "http://a/b/c/"),
+                         ("./", "http://a/b/c/"),
+                         ("..", "http://a/b/"),
+                         ("../", "http://a/b/"),
+                         ("../g", "http://a/b/g"),
+                         ("../..", "http://a/"),
+                         ("../../", "http://a/"),
+                         ("../../g", "http://a/g")]:
+            test('http://a/b/c/d;p?q', rel, res)
+        # Tests from rfc "Abnormal Examples"
+        for rel, res in [("../../../g", "http://a/g"),
+                         ("../../../../g", "http://a/g"),
+                         ("/./g", "http://a/g"),
+                         ("/../g", "http://a/g"),
+                         ("g.", "http://a/b/c/g."),
+                         (".g", "http://a/b/c/.g"),
+                         ("g..", "http://a/b/c/g.."),
+                         ("..g", "http://a/b/c/..g"),
+                         ("./../g", "http://a/b/g"),
+                         ("./g/.", "http://a/b/c/g/"),
+                         ("g/./h", "http://a/b/c/g/h"),
+                         ("g/../h", "http://a/b/c/h"),
+                         ("g;x=1/./y", "http://a/b/c/g;x=1/y"),
+                         ("g;x=1/../y", "http://a/b/c/y"),
+                         ("g?y/./x", "http://a/b/c/g?y/./x"),
+                         ("g?y/../x", "http://a/b/c/g?y/../x"),
+                         ("g#s/./x", "http://a/b/c/g#s/./x"),
+                         ("g#s/../x", "http://a/b/c/g#s/../x"),
+                         ("http:g", "http:g")]:
+            test('http://a/b/c/d;p?q', rel, res)
 
     def test_hashable(self):
         for url in [URL(), URL('a://b:c@d:5/f?g#h')]:

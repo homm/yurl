@@ -1,5 +1,5 @@
 import re
-from collections import namedtuple
+from collections import namedtuple, deque
 
 # This module based on rfc3986.
 
@@ -127,6 +127,9 @@ class URL(URLTuple):
     def __nonzero__(self):
         return any(self)
 
+    def has_authoruty(self):
+        return bool(self.host or self.userinfo or self.port)
+
     def is_relative(self):
         # In terms of rfc relative url have no scheme.
         # See is_relative_path().
@@ -136,7 +139,7 @@ class URL(URLTuple):
         # Absolute path always starts with slash. Also paths with authority
         # can not be relative.
         return not self.path.startswith('/') and not (
-            self.scheme or self.host or self.userinfo or self.port)
+            self.scheme or self.has_authoruty())
 
     def is_host_ipv4(self):
         if not self.host.startswith('['):
@@ -208,8 +211,60 @@ class URL(URLTuple):
     ### Manipulation
 
     def __add__(self, other):
+        # This method designed with one issue. By rfc delimeters without
+        # following values are matter. For example:
+        # 'http://ya.ru/page' + '//?none' = 'http:'
+        # 'http://ya.ru/page?param' + '?' = 'http://ya.ru/page'
+        # But the parser makes no distinction between empty and undefined part.
+        # 'http://ya.ru/page' + '//?none' = 'http://ya.ru/page?none'
+        # 'http://ya.ru/page?param' + '?' = 'http://ya.ru/page?param'
+        # Same bug also present in standart urllib.parse.urljoin.
+        # I hope it will be fixed in future yurls.
+
         if not isinstance(other, URLTuple):
-            other = type(self)(other)
+            try:
+                other = URL(other)  # try string
+            except TypeError:
+                raise NotImplementedError()
+
+        if not other:
+            return self
+
+        if other.scheme or not self:
+            return other
+
+        if other.has_authoruty():
+            return tuple.__new__(type(self), (self.scheme,) + other[1:])
+
+        if other.path:
+            if other.path[0] == '/':
+                path = other.path
+            else:
+                path = self.path.rpartition('/')
+                path = path[0] + path[1] + other.path
+            query = other.query
+        else:
+            path = self.path
+            query = other.query or self.query
+
+        return tuple.__new__(type(self), (self.scheme, self.host,
+                                          self.remove_dot_segments(path),
+                                          query, other.fragment,
+                                          self.userinfo, self.port))
+
+    def __radd__(self, left):
+        # if other is instance of URL(), __radd__() should not be called.
+        if type(left) == URLTuple:
+            return URL.__add__(left, self)
+
+        try:
+            left = URL(left)  # try string
+        except TypeError:
+            raise NotImplementedError()
+
+        # We can't call own constructor, but we need own instance.
+        left.__class__ = type(self)
+        return left.__add__(self)
 
     def replace(self, scheme=None, host=None, path=None, query=None,
                 fragment=None, userinfo=None, port=None, authority=None,
@@ -263,6 +318,24 @@ class URL(URLTuple):
             self.userinfo or userinfo,
             self.port or str(port),
         ))
+
+    ### Utils
+
+    @classmethod
+    def remove_dot_segments(cls, path):
+        stack = deque()
+        last = 0
+        for segment in path.split('/'):
+            if segment == '.':
+                pass
+            elif segment == '..':
+                if len(stack):
+                    stack.pop()
+            else:
+                stack.append(segment)
+        if path.endswith(('/.', '/..')):
+            stack.append('')
+        return '/'.join(stack)
 
     ### Python 2 to 3 compatibility
 
