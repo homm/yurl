@@ -218,8 +218,9 @@ class URL(URLTuple):
         # But the parser makes no distinction between empty and undefined part.
         # 'http://ya.ru/page' + '//?none' = 'http://ya.ru/page?none'
         # 'http://ya.ru/page?param' + '?' = 'http://ya.ru/page?param'
-        # Same bug also present in standart urllib.parse.urljoin.
+        # Same bug also present in urllib.parse.urljoin.
         # I hope it will be fixed in future yurls.
+        # TODO: call remove_dot_segments() when path not modified.
 
         if not isinstance(other, URLTuple):
             try:
