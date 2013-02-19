@@ -240,7 +240,7 @@ class URL(URLTuple):
 
     def replace_from(self, other):
         if not isinstance(other, URLTuple):
-            other = type(self)(other)
+            other = URL(other)
 
         return tuple.__new__(type(self), (
             other.scheme or self.scheme,
