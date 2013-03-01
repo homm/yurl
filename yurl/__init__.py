@@ -225,30 +225,29 @@ class URL(URLTuple):
         if not isinstance(other, URLTuple):
             raise NotImplementedError()
 
-        if not other:
-            return self
+        scheme, host, path, query, fragment, userinfo, port = other
 
-        if other.scheme or not self:
-            return other
+        if not scheme:
+            scheme = self.scheme
 
-        if other.has_authoruty():
-            return tuple.__new__(type(self), (self.scheme,) + other[1:])
+            if not (host or userinfo or port):
+                host, userinfo, port = self.host, self.userinfo, self.port
 
-        if other.path:
-            if other.path[0] == '/':
-                path = other.path
-            else:
-                path = self.path.rpartition('/')
-                path = path[0] + path[1] + other.path
-            query = other.query
-        else:
-            path = self.path
-            query = other.query or self.query
+                if not path:
+                    path = self.path
 
-        return tuple.__new__(type(self), (self.scheme, self.host,
-                                          self.remove_dot_segments(path),
-                                          query, other.fragment,
-                                          self.userinfo, self.port))
+                    if not query:
+                        query = self.query
+
+                else:
+                    if path[0] != '/':
+                        parts = self.path.rpartition('/')
+                        path = parts[0] + parts[1] + path
+
+        path = self.remove_dot_segments(path)
+
+        return tuple.__new__(type(self), (scheme, host, path, query, fragment,
+                                          userinfo, port))
 
     def __radd__(self, left):
         # if other is instance of URL(), __radd__() should not be called.
