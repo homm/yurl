@@ -223,10 +223,7 @@ class URL(URLTuple):
         # TODO: call remove_dot_segments() when path not modified.
 
         if not isinstance(other, URLTuple):
-            try:
-                other = URL(other)  # try string
-            except TypeError:
-                raise NotImplementedError()
+            raise NotImplementedError()
 
         if not other:
             return self
@@ -258,14 +255,7 @@ class URL(URLTuple):
         if type(left) == URLTuple:
             return URL.__add__(left, self)
 
-        try:
-            left = URL(left)  # try string
-        except TypeError:
-            raise NotImplementedError()
-
-        # We can't call own constructor, but we need own instance.
-        left.__class__ = type(self)
-        return left.__add__(self)
+        raise NotImplementedError()
 
     def replace(self, scheme=None, host=None, path=None, query=None,
                 fragment=None, userinfo=None, port=None, authority=None,
