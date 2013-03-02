@@ -52,8 +52,9 @@ class ParseTests(unittest.TestCase):
         self.one_try('google.com:80/root', 'google.com', '', '80/root')
         self.one_try('not_cheme:path', 'not_cheme', '', 'path', invalid=Scheme)
         self.one_try('37signals:book', '37signals', '', 'book', invalid=Scheme)
-        self.one_try(':realy-path', '', '', ':realy-path')
-        self.one_try('://even-this', '', '', '://even-this')
+        self.one_try(':relative-path', '', '', ':relative-path')
+        self.one_try(':relative/path', '', '', ':relative/path')
+        self.one_try('://and-this', '', '', '://and-this')
 
     def test_host(self):
         self.one_try('scheme://host/path', 'scheme', 'host', '/path')

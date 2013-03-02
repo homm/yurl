@@ -56,8 +56,14 @@ class URL(URLTuple):
                 if not _port or _port.isdigit():
                     host, port = host[:_port_idx], _port
         else:
-            if (userinfo or host or port) and path and path[0] != '/':
-                path = '/' + path
+            if userinfo or host or port:
+                if path and path[0] != '/':
+                    path = '/' + path
+
+            # if url starts with path with ':'' in first segment
+            elif not scheme and path.partition('/')[0].find(':') > 0:
+                path = './' + path
+
 
         # | Although schemes are case-insensitive, the canonical form
         # | is lowercase. An implementation should only produce lowercase
@@ -73,8 +79,12 @@ class URL(URLTuple):
     ### Serialization
 
     def __unicode__(self):
-        base = self.authority
-        path = self[2]
+        scheme, base, path, query, fragment, userinfo, port = self
+
+        if port:
+            base += ':' + port
+        if userinfo:
+            base = userinfo + '@' + base
 
         if base:
             base = '//' + base
@@ -83,15 +93,16 @@ class URL(URLTuple):
         elif path[0:2] == '//':
             base = '//'
 
-        # scheme
-        if self[0]:
-            base = self[0] + ':' + base
+        if scheme:
+            base = scheme + ':' + base
 
-        # if url starts with path
-        elif not base and ':' in path.partition('/')[0]:
-            base = './'
+        if query:
+            path += '?' + query
 
-        return base + self.full_path
+        if fragment:
+            path += '#' + fragment
+
+        return base + path
 
     as_string = __unicode__
 
