@@ -156,10 +156,9 @@ class InterfaceTests(unittest.TestCase):
         '{0}{1}{2}'.format(url.authority, url.full_path, url)
 
     def test_add(self):
-        def test(base, rel, res, string_only=False):
+        def test(base, rel, res):
             self.assertEqual(str(URL(base) + URL(rel)), res)
-            if not string_only:
-                self.assertEqual(URL(base) + URL(rel), URL(res))
+            self.assertEqual(URL(base) + URL(rel), URL(res))
 
         # Tests from rfc "Normal Exaples"
         for args in [("g:h", "g:h"),
@@ -187,10 +186,10 @@ class InterfaceTests(unittest.TestCase):
                      ("../../g", "http://a/g")]:
             test('http://a/b/c/d;p?q', *args)
         # Tests from rfc "Abnormal Examples"
-        for args in [("../../../g", "http://a/g", True),
-                     ("../../../../g", "http://a/g", True),
+        for args in [("../../../g", "http://a/g"),
+                     ("../../../../g", "http://a/g"),
                      ("/./g", "http://a/g"),
-                     ("/../g", "http://a/g", True),
+                     ("/../g", "http://a/g"),
                      ("g.", "http://a/b/c/g."),
                      (".g", "http://a/b/c/.g"),
                      ("g..", "http://a/b/c/g.."),
@@ -254,10 +253,13 @@ class InterfaceTests(unittest.TestCase):
             for idx, (field, value) in enumerate(zip(url._fields, url)):
                 # replase to same
                 self.assertEqual(url.replace(**{field: value}), url)
-                # replace to some
-                self.assertEqual(url.replace(**{field: 'some'})[idx], 'some')
                 # clear
                 self.assertEqual(url.replace(**{field: ''})[idx], '')
+                # replace to some
+                if url.has_authority() and field == 'path':
+                    self.assertEqual(url.replace(**{field: 'some'})[idx], '/some')
+                else:
+                    self.assertEqual(url.replace(**{field: 'some'})[idx], 'some')
 
         self.assertEqual(
             URL().replace('SCHEME', 'HOST', '/PATH', '', '', 'AUTH', 30),
@@ -284,6 +286,8 @@ class InterfaceTests(unittest.TestCase):
             self.assertEqual(url.full_path, full_path)
             url = url.replace(full_path=orig_path)
             self.assertEqual(url.full_path, orig_path)
+
+        self.assertEqual(URL('//host/some').replace(path='path').path, '/path')
 
     def test_setdefault(self):
         empty = URL()
@@ -340,9 +344,9 @@ class BenchmarkTests(unittest.TestCase):
         setup0 = 'from yurl import URL, CachedURL\n'
         try:
             import urllib.parse
-            setup0 += 'from urllib.parse import urlparse, urlsplit\n'
+            setup0 += 'from urllib.parse import urlparse, urlsplit, urljoin\n'
         except ImportError:
-            setup0 += 'from urlparse import urlparse, urlsplit\n'
+            setup0 += 'from urlparse import urlparse, urlsplit, urljoin\n'
         try:
             import cPickle
             setup0 += 'import cPickle as pickle\n'
@@ -393,6 +397,27 @@ class BenchmarkTests(unittest.TestCase):
                          "URL(url + str(i)).as_string(); i+=1",
                          "urlsplit(url + str(i)).geturl(); i+=1",
                          "urlparse(url + str(i)).geturl(); i+=1")
+
+    def test_join(self):
+        join_cases = [('http://ya.ru/user/photos/id12324/photo3',
+                       '../../../mikhail/photos/id6543/photo99?param'),
+                      ('http://ya.ru/user/photos/id12324', '#fragment'),
+                      ('http://ya.ru/', 'https://google.com/?q=yurl')]
+
+        print('\n=== Test join ===')
+        print('\n  = result is string =')
+        for base, rel in join_cases:
+            setup = "i = 0; base = {0}; rel = {1}".format(repr(base), repr(rel))
+            self.one_try('{0} + {1}'.format(repr(base), repr(rel)), setup,
+                         "str(CachedURL(base) + URL(rel + str(i))); i+=1",
+                         "urljoin(base, rel + str(i)); i+=1")
+
+        print('\n  = result is parsed =')
+        for base, rel in join_cases:
+            setup = "i = 0; base = {0}; rel = {1}".format(repr(base), repr(rel))
+            self.one_try('{0} + {1}'.format(repr(base), repr(rel)), setup,
+                         "CachedURL(base) + URL(rel + str(i)); i+=1",
+                         "urlparse(urljoin(base, rel + str(i))); i+=1")
 
     def test_pickle(self):
         print('\n=== Test pickle ===')

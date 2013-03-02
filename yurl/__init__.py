@@ -55,6 +55,9 @@ class URL(URLTuple):
                 _port = host[_port_idx + 1:]
                 if not _port or _port.isdigit():
                     host, port = host[:_port_idx], _port
+        else:
+            if (userinfo or host or port) and path and path[0] != '/':
+                path = '/' + path
 
         # | Although schemes are case-insensitive, the canonical form
         # | is lowercase. An implementation should only produce lowercase
@@ -78,10 +81,6 @@ class URL(URLTuple):
 
         if base:
             base = '//' + base
-
-            # Url with authority can not be relative.
-            if path and path[0] != '/':
-                base += '/'
 
         # Escape paths with slashes by adding explicit empty host.
         elif path[0:2] == '//':
@@ -244,10 +243,9 @@ class URL(URLTuple):
                         parts = self.path.rpartition('/')
                         path = parts[0] + parts[1] + path
 
-        path = self.remove_dot_segments(path)
-
-        return tuple.__new__(type(self), (scheme, host, path, query, fragment,
-                                          userinfo, port))
+        return URL.__new__(type(self), None, scheme, host,
+                           self.remove_dot_segments(path),
+                           query, fragment, userinfo, port)
 
     def __radd__(self, left):
         # if other is instance of URL(), __radd__() should not be called.
@@ -273,27 +271,27 @@ class URL(URLTuple):
             # Use original URL just for parse.
             path, query, fragment = URL(full_path)[2:5]
 
-        return tuple.__new__(type(self), (
-            self.scheme if scheme is None else scheme.lower(),
-            self.host if host is None else host.lower(),
+        return URL.__new__(type(self), None,
+            self.scheme if scheme is None else scheme,
+            self.host if host is None else host,
             self.path if path is None else path,
             self.query if query is None else query,
             self.fragment if fragment is None else fragment,
             self.userinfo if userinfo is None else userinfo,
-            self.port if port is None else str(port),
-        ))
+            self.port if port is None else port,
+        )
 
     def setdefault(self, scheme='', host='', path='', query='', fragment='',
                    userinfo='', port=''):
-        return tuple.__new__(type(self), (
-            self.scheme or scheme.lower(),
-            self.host or host.lower(),
+        return URL.__new__(type(self), None,
+            self.scheme or scheme,
+            self.host or host,
             self.path or path,
             self.query or query,
             self.fragment or fragment,
             self.userinfo or userinfo,
-            self.port or str(port),
-        ))
+            self.port or port,
+        )
 
     ### Utils
 
