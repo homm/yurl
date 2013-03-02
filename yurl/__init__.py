@@ -127,7 +127,7 @@ class URL(URLTuple):
     def __nonzero__(self):
         return any(self)
 
-    def has_authoruty(self):
+    def has_authority(self):
         return bool(self.host or self.userinfo or self.port)
 
     def is_relative(self):
@@ -139,7 +139,7 @@ class URL(URLTuple):
         # Absolute path always starts with slash. Also paths with authority
         # can not be relative.
         return not self.path.startswith('/') and not (
-            self.scheme or self.has_authoruty())
+            self.scheme or self.has_authority())
 
     def is_host_ipv4(self):
         if not self.host.startswith('['):
