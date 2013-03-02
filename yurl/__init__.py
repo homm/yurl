@@ -83,15 +83,13 @@ class URL(URLTuple):
 
         if port:
             base += ':' + port
+
         if userinfo:
             base = userinfo + '@' + base
 
-        if base:
-            base = '//' + base
-
         # Escape path with slashes by adding explicit empty host.
-        elif path[0:2] == '//':
-            base = '//'
+        if base or path[0:2] == '//':
+            base = '//' + base
 
         if scheme:
             base = scheme + ':' + base
