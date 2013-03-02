@@ -420,25 +420,6 @@ class BenchmarkTests(unittest.TestCase):
                          "CachedURL(base) + URL(rel + str(i)); i+=1",
                          "urlparse(urljoin(base, rel + str(i))); i+=1")
 
-    def test_pickle(self):
-        print('\n=== Test pickle ===')
-        for url in self.test_urls:
-            setup = ("yurl = URL({0})\n"
-                     "parsed = urlsplit({0})\n").format(repr(url))
-            self.one_try(url, setup,
-                         "pickle.dumps(yurl)",
-                         "pickle.dumps(parsed)")
-
-    def test_unpickle(self):
-        print('\n=== Test unpickle ===')
-        for url in self.test_urls:
-            setup = (("yurl = pickle.dumps(URL({0}))\n"
-                      "parsed = pickle.dumps(urlsplit({0}))\n")
-                     .format(repr(url)))
-            self.one_try(url, setup,
-                         "pickle.loads(yurl)",
-                         "pickle.loads(parsed)")
-
     def test_heavy(self):
         print('\n=== Test manipulations speed ===')
         for url in ['https://habrahabr.ru:80/a/b/c?d=f#h']:
