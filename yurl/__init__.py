@@ -62,32 +62,30 @@ class URL(URLTuple):
         # | Although schemes are case-insensitive, the canonical form
         # | is lowercase. An implementation should only produce lowercase
         # | scheme names for consistency.
-        scheme = scheme.lower()
 
         # | Although host is case-insensitive, producers and normalizers
         # | should use lowercase for registered names and hexadecimal
         # | addresses for the sake of uniformity.
-        # TODO: while only using uppercase letters for percent-encodings
-        host = host.lower()
 
-        return tuple.__new__(cls, (scheme, host, path, query, fragment,
-                                   userinfo, str(port)))
+        return tuple.__new__(cls, (scheme.lower(), host.lower(), path, query,
+                                   fragment, userinfo, str(port)))
 
     ### Serialization
 
     def __unicode__(self):
         base = self.authority
-        path = self.path
+        path = self[2]
 
         if base:
             base = '//' + base
 
-        # Escape paths with slashes by adding explicit empty host.
+        # Escape path with slashes by adding explicit empty host.
         elif path[0:2] == '//':
             base = '//'
 
-        if self.scheme:
-            base = self.scheme + ':' + base
+        # scheme
+        if self[0]:
+            base = self[0] + ':' + base
 
         # if url starts with path
         elif not base and ':' in path.partition('/')[0]:
@@ -104,7 +102,7 @@ class URL(URLTuple):
 
     @property
     def authority(self):
-        authority = self.host
+        authority = self[1]
         userinfo, port = self[5:7]
         if port:
             authority += ':' + port
@@ -127,22 +125,22 @@ class URL(URLTuple):
         return any(self)
 
     def has_authority(self):
-        return bool(self.host or self.userinfo or self.port)
+        return bool(self[1] or self[5] or self[6])
 
     def is_relative(self):
         # In terms of rfc relative url have no scheme.
         # See is_relative_path().
-        return not self.scheme
+        return not self[0]
 
     def is_relative_path(self):
         # Absolute path always starts with slash. Also paths with authority
         # can not be relative.
-        return not self.path.startswith('/') and not (
-            self.scheme or self.has_authority())
+        return not self[2][:1] == '/' and not (
+            self[0] or self.has_authority())
 
     def is_host_ipv4(self):
-        if not self.host.startswith('['):
-            parts = self.host.split('.')
+        if self[1][:1] != '[':
+            parts = self[1].split('.')
             if len(parts) == 4 and all(part.isdigit() for part in parts):
                 if all(int(part, 10) < 256 for part in parts):
                     return True
@@ -152,7 +150,7 @@ class URL(URLTuple):
         if self.is_host_ipv4():
             return True
 
-        if self.host.startswith('[') and self.host.endswith(']'):
+        if self[1][:1] == '[' and self[1][-1:] == ']':
             return True
 
         return False
@@ -175,17 +173,17 @@ class URL(URLTuple):
         ''', re.VERBOSE | re.IGNORECASE).match
 
     def validate(self):
-        if self.scheme:
-            if not self._valid_scheme_re(self.scheme):
+        if self[0]:
+            if not self._valid_scheme_re(self[0]):
                 raise InvalidScheme()
 
-        if self.userinfo:
-            if not self._valid_userinfo_re(self.userinfo):
+        if self[5]:
+            if not self._valid_userinfo_re(self[5]):
                 raise InvalidUserinfo()
 
-        if self.host:
-            host = self.host
-            if host.startswith('[') and host.endswith(']'):
+        host = self[1]
+        if host:
+            if host[:1] == '[' and host[-1:] == ']':
                 if not self._valid_ip_literal_re(host[1:-1]):
                     raise InvalidHost()
 
@@ -197,12 +195,12 @@ class URL(URLTuple):
         # There should be no scheme and authority and first segment of path
         # should contain ':' or starts with '//'. But this library not about
         # punish user. We can escape this paths when formatting string.
-        if self.path:
-            if not self._valid_path_re(self.path):
+        if self[2]:
+            if not self._valid_path_re(self[2]):
                 raise InvalidPath()
 
-        if self.query:
-            if not self._valid_query_re(self.query):
+        if self[3]:
+            if not self._valid_query_re(self[3]):
                 raise InvalidQuery()
 
         return self
@@ -227,20 +225,20 @@ class URL(URLTuple):
         scheme, host, path, query, fragment, userinfo, port = other
 
         if not scheme:
-            scheme = self.scheme
+            scheme = self[0]
 
             if not (host or userinfo or port):
-                host, userinfo, port = self.host, self.userinfo, self.port
+                host, userinfo, port = self[1], self[5], self[6]
 
                 if not path:
-                    path = self.path
+                    path = self[2]
 
                     if not query:
-                        query = self.query
+                        query = self[3]
 
                 else:
                     if path[0] != '/':
-                        parts = self.path.rpartition('/')
+                        parts = self[2].rpartition('/')
                         path = parts[0] + parts[1] + path
 
         return URL.__new__(type(self), None, scheme, host,
@@ -272,25 +270,25 @@ class URL(URLTuple):
             path, query, fragment = URL(full_path)[2:5]
 
         return URL.__new__(type(self), None,
-            self.scheme if scheme is None else scheme,
-            self.host if host is None else host,
-            self.path if path is None else path,
-            self.query if query is None else query,
-            self.fragment if fragment is None else fragment,
-            self.userinfo if userinfo is None else userinfo,
-            self.port if port is None else port,
+            self[0] if scheme is None else scheme,
+            self[1] if host is None else host,
+            self[2] if path is None else path,
+            self[3] if query is None else query,
+            self[4] if fragment is None else fragment,
+            self[5] if userinfo is None else userinfo,
+            self[6] if port is None else port,
         )
 
     def setdefault(self, scheme='', host='', path='', query='', fragment='',
                    userinfo='', port=''):
         return URL.__new__(type(self), None,
-            self.scheme or scheme,
-            self.host or host,
-            self.path or path,
-            self.query or query,
-            self.fragment or fragment,
-            self.userinfo or userinfo,
-            self.port or port,
+            self[0] or scheme,
+            self[1] or host,
+            self[2] or path,
+            self[3] or query,
+            self[4] or fragment,
+            self[5] or userinfo,
+            self[6] or port,
         )
 
     ### Utils

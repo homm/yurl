@@ -438,6 +438,17 @@ class BenchmarkTests(unittest.TestCase):
                          "pickle.loads(yurl)",
                          "pickle.loads(parsed)")
 
+    def test_heavy(self):
+        print('\n=== Test manipulations speed ===')
+        for url in ['https://habrahabr.ru:80/a/b/c?d=f#h']:
+            setup = "url = URL({0})".format(repr(url))
+            self.one_try(url, setup, "pass",
+                         "(url.validate()"
+                         " .setdefault(userinfo='homm')"
+                         " .replace(authority='ya.ru')"
+                         "  + URL('../../f'))"
+                         ".validate().as_string()")
+
 
 if __name__ == '__main__':
     if '-bench' in sys.argv:
