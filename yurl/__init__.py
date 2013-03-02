@@ -55,6 +55,7 @@ class URL(URLTuple):
                 _port = host[_port_idx + 1:]
                 if not _port or _port.isdigit():
                     host, port = host[:_port_idx], _port
+
         else:
             if userinfo or host or port:
                 if path and path[0] != '/':
