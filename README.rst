@@ -293,6 +293,67 @@ And some other:
     http://google.com/
 
 
+More about performance
+-----------------------
+
+Yurl comes with bunch of performance tests. Results may vary depending on the
+Python version and the CPU:
+
+::
+
+    $ python2.7 ./test.py -bench
+
+    === Test as string ===
+      yurl usplit uparse   purl
+     12.01  9.783  11.94  27.08 !worse  https://user:info@yandex.ru:8080/path/to+the=ar?gum=ent#s
+     8.533  21.89  23.82  18.88   scheme:8080/path/to;the=ar?gum=ent#s
+     10.12  3.879  9.007  12.21 !worse  re/ative:path;with?query
+     5.268   2.39  4.043  10.26 !worse  lucky-number:3456
+     4.806  3.662  5.349  13.73 !worse  //host:80
+     4.953  3.342  4.885   13.2 !worse  #frag
+
+    === Manipulations speed ===
+      noop   yurl
+    0.0751  178.9   https://habrahabr.ru:80/a/b/c?d=f#h
+
+    === Test join ===
+
+      = result is string =
+      yurl  ujoin
+     111.6  127.2   u'http://ya.ru/user/photos/id12324/photo3' + u'../../../mikhail/photos/id6543/photo99?param'
+     85.87  71.06 !worse  u'http://ya.ru/user/photos/id12324' + u'#fragment'
+     82.12  100.8   u'http://ya.ru/' + u'https://google.com/?q=yurl'
+
+      = result is parsed =
+      yurl  ujoin
+     102.6  181.3   u'http://ya.ru/user/photos/id12324/photo3' + u'../../../mikhail/photos/id6543/photo99?param'
+     73.15  125.7   u'http://ya.ru/user/photos/id12324' + u'#fragment'
+     76.26  184.3   u'http://ya.ru/' + u'https://google.com/?q=yurl'
+
+    === Test parse ===
+
+      = dupass cache =
+      yurl usplit uparse   purl
+     36.25  73.31  85.91  166.5   https://user:info@yandex.ru:8080/path/to+the=ar?gum=ent#s
+     20.34  58.84  77.29  138.9   scheme:8080/path/to;the=ar?gum=ent#s
+     18.25  33.21  48.72  109.3   re/ative:path;with?query
+      19.3  66.77  76.16  135.5   lucky-number:3456
+      24.0  35.57  43.36  119.2   //host:80
+      18.0  25.57  37.78  114.4   #frag
+
+      = with cache =
+      yurl usplit uparse   purl
+     9.902  14.43  24.04  95.92   https://user:info@yandex.ru:8080/path/to+the=ar?gum=ent#s
+     5.726  7.211  23.14  79.94   scheme:8080/path/to;the=ar?gum=ent#s
+     5.497  6.804  22.86  80.93   re/ative:path;with?query
+     5.357  6.521  14.72   72.0   lucky-number:3456
+     5.076  6.763  14.12  87.39   //host:80
+     5.824  7.993  26.78  73.03   #frag
+
+In tests where any of the other libraries beats yurl you can see "!worse"
+marker.
+
+
 Changelog
 ---------
 
