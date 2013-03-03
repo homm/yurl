@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 
-from distutils.core import setup
+import sys
+from setuptools import setup
+
+tests_require = []
+if sys.version_info < (2, 7):
+    tests_require.append('unittest2')
 
 setup(name='YURL',
       version='0.10',
@@ -9,4 +14,6 @@ setup(name='YURL',
       author='Aleksadr Karpinsky',
       author_email='homm86@gmail.com',
       url='http://github.com/homm/yurl/',
-      packages=['yurl'])
+      packages=['yurl'],
+      tests_require=tests_require,
+      test_suite='test')
