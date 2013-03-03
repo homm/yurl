@@ -382,6 +382,7 @@ class InterfaceTests(unittest.TestCase):
 class BenchmarkTests(unittest.TestCase):
     test_urls = ['https://user:info@yandex.ru:8080/path/to+the=ar?gum=ent#s',
                  'scheme:8080/path/to;the=ar?gum=ent#s',
+                 're/ative:path;with?query',
                  'lucky-number:3456',
                  '//host:80',
                  '#frag']
@@ -399,7 +400,7 @@ class BenchmarkTests(unittest.TestCase):
             import purl
             setup0 += 'import purl\n'
             self.use_purl = True
-        except ImportError:
+        except (ImportError, SyntaxError):
             self.use_purl = False
 
         self.test = lambda stmt, setup='': min(repeat(stmt, setup0 + setup,
@@ -415,6 +416,12 @@ class BenchmarkTests(unittest.TestCase):
 
     def test_parse(self):
         print('\n=== Test parse ===')
+
+        print('\n  = dupass cache =')
+        if self.use_purl:
+            print('  yurl usplit uparse   purl')
+        else:
+            print('  yurl usplit uparse')
         for url in self.test_urls:
             setup = "i = 0; url = {0}".format(repr(url))
             tests = ["URL(url + str(i)); i+=1",
@@ -424,7 +431,11 @@ class BenchmarkTests(unittest.TestCase):
                 tests.append("purl.URL(url + str(i)); i+=1")
             self.one_try(url, setup, *tests)
 
-        print('  = with cache =')
+        print('\n  = with cache =')
+        if self.use_purl:
+            print('  yurl usplit uparse   purl')
+        else:
+            print('  yurl usplit uparse')
         for url in self.test_urls:
             setup = "i = 0; url = {0}".format(repr(url))
             tests = ["CachedURL(url + str(i % 20)); i+=1",
@@ -435,15 +446,24 @@ class BenchmarkTests(unittest.TestCase):
             self.one_try(url, setup, *tests)
 
     def test_concat(self):
-        print('\n=== Test as_string() ===')
+        print('\n=== Test as string ===')
+        if self.use_purl:
+            print('  yurl usplit uparse   purl')
+        else:
+            print('  yurl usplit uparse')
+
+        setup = ("yurl = URL({0})\n"
+                 "splitted = urlsplit({0})\n"
+                 "parsed = urlparse({0})\n")
+        if self.use_purl:
+            setup += "purl = purl.URL({0})\n"
         for url in self.test_urls:
-            setup = ("yurl = URL({0})\n"
-                     "splitted = urlsplit({0})\n"
-                     "parsed = urlparse({0})\n").format(repr(url))
-            self.one_try(url, setup,
-                         "yurl.as_string()",
-                         "splitted.geturl()",
-                         "parsed.geturl()")
+            tests = ["yurl.as_string()",
+                     "splitted.geturl()",
+                     "parsed.geturl()"]
+            if self.use_purl:
+                tests.append("purl.as_string()")
+            self.one_try(url, setup.format(repr(url)), *tests)
 
     def test_join(self):
         join_cases = [('http://ya.ru/user/photos/id12324/photo3',
@@ -452,7 +472,9 @@ class BenchmarkTests(unittest.TestCase):
                       ('http://ya.ru/', 'https://google.com/?q=yurl')]
 
         print('\n=== Test join ===')
+
         print('\n  = result is string =')
+        print('  yurl  ujoin')
         for base, rel in join_cases:
             setup = "i = 0; base = {0}; rel = {1}".format(repr(base), repr(rel))
             self.one_try('{0} + {1}'.format(repr(base), repr(rel)), setup,
@@ -460,6 +482,7 @@ class BenchmarkTests(unittest.TestCase):
                          "urljoin(base, rel + str(i)); i+=1")
 
         print('\n  = result is parsed =')
+        print('  yurl  ujoin')
         for base, rel in join_cases:
             setup = "i = 0; base = {0}; rel = {1}".format(repr(base), repr(rel))
             self.one_try('{0} + {1}'.format(repr(base), repr(rel)), setup,
@@ -467,7 +490,8 @@ class BenchmarkTests(unittest.TestCase):
                          "urlparse(urljoin(base, rel + str(i))); i+=1")
 
     def test_heavy(self):
-        print('\n=== Test manipulations speed ===')
+        print('\n=== Manipulations speed ===')
+        print('  noop   yurl')
         for url in ['https://habrahabr.ru:80/a/b/c?d=f#h']:
             setup = "url = URL({0})".format(repr(url))
             self.one_try(url, setup, "pass",
