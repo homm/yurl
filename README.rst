@@ -95,7 +95,7 @@ You can also chech is url host is ip:
     >>> URL('//[::ae21:ad12]/').is_host_ipv4()
     False
 
-Ip does not validate, so it is recomended to use validate() method:
+Ip does not validated, so it is recommended to use validate() method:
 
     >>> URL('//[+ae21:ad12]/').is_host_ip()
     True
@@ -110,7 +110,7 @@ Ip does not validate, so it is recomended to use validate() method:
 Modify urls
 -----------
 
-Afert parsing url can be modified in different ways.
+After parsing url can be modified in different ways.
 
 replace() method
 ----------------
@@ -166,8 +166,8 @@ And not associative in general:
 Cache url parsing
 -----------------
 
-Original urlparse function cache every parsed url. In most cases this is
-unnecessary. But if you parse same urls again and again you can use CachedURL:
+Original urlparse() cache every parsed url. In most cases this is unnecessary.
+But if you parse the same link again and again you can use CachedURL:
 
     >>> CachedURL('http://host') is CachedURL('http://host')
     True
@@ -197,10 +197,10 @@ response.
     But scheme is only can have default value in urlsplit().
 
 *   Another parameter allow_fragments can be used to prevent splitting
-    #fragment from path. The problem is we can not say «I do not want this url
-    contatin fragment». If url contatin '#', it contatin frаgment. If scheme
+    #fragment from path. The problem is that we can't say «I do not want
+    fragment in this url». If url contatin '#', it contatin frаgment. If scheme
     can not contatin fragment, '#' still can not be used in another parts.
-    Caller has a choise: it can ignore fragment or raise. But url can not be
+    Caller has a choise: he can ignore fragment or raise. But url can not be
     parsed with ignoring '#':
 
     >>> urlparse('/path#frag:ment?query').query
@@ -227,7 +227,7 @@ response.
     >>> urlsplit('//butterflies[]:80').port
     80
 
-*   It don't understend my favarite scheme:
+*   It don't understend my favorite scheme:
 
     >>> urlsplit('lucky-number:33')[:]
     ('', '', 'lucky-number:33', '', '')
@@ -265,8 +265,8 @@ And some other:
     >>> timeit("url.replace(scheme='https')", "import yurl; url = yurl.URL('http://google.com/')", number=10000)
     0.020306110382080078
 
-*   Purl have ugly jquery-like api, when one method returns different objects
-    based on arguments.
+*   Purl have ugly jquery-like api, when one method may return different
+    objects depending on the arguments.
 
 *   Purl parsing is dangerous:
 
@@ -356,6 +356,13 @@ marker.
 
 Changelog
 ---------
+
+v.0.10
+------
+
+* method replace_from() removed
+* concatenation with string no longer aliasd with join
+* join always remove dots segments (as defined in rfc)
 
 v0.9
 ----

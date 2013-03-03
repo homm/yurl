@@ -282,26 +282,24 @@ class URL(URLTuple):
             path, query, fragment = URL(full_path)[2:5]
 
         return URL.__new__(type(self), None,
-            self[0] if scheme is None else scheme,
-            self[1] if host is None else host,
-            self[2] if path is None else path,
-            self[3] if query is None else query,
-            self[4] if fragment is None else fragment,
-            self[5] if userinfo is None else userinfo,
-            self[6] if port is None else port,
-        )
+                           self[0] if scheme is None else scheme,
+                           self[1] if host is None else host,
+                           self[2] if path is None else path,
+                           self[3] if query is None else query,
+                           self[4] if fragment is None else fragment,
+                           self[5] if userinfo is None else userinfo,
+                           self[6] if port is None else port)
 
     def setdefault(self, scheme='', host='', path='', query='', fragment='',
                    userinfo='', port=''):
         return URL.__new__(type(self), None,
-            self[0] or scheme,
-            self[1] or host,
-            self[2] or path,
-            self[3] or query,
-            self[4] or fragment,
-            self[5] or userinfo,
-            self[6] or port,
-        )
+                           self[0] or scheme,
+                           self[1] or host,
+                           self[2] or path,
+                           self[3] or query,
+                           self[4] or fragment,
+                           self[5] or userinfo,
+                           self[6] or port)
 
     ### Utils
 
