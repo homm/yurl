@@ -145,10 +145,62 @@ class InterfaceTests(unittest.TestCase):
                              path='/f', query='g', fragment='h'))
         # ignore
         self.assertEqual(URL('//host'), URL('//host', scheme='sh', port='80'))
+
+    def test_fixes(self):
         # port convert
         self.assertEqual(URL(port=80), URL(port='80'))
-        self.assertEqual(URL(None, 'SCHEME', 'HOST'),
-                         URL(None, 'scheme', 'host'))
+        self.assertEqual(URL().replace(port=80), URL(port='80'))
+        self.assertEqual(URL().setdefault(port=80), URL(port='80'))
+
+        # scheme lowercase
+        self.assertEqual(URL(None, 'SCHEME'), URL(None, 'scheme'))
+        self.assertEqual(URL().replace('SCHEME'), URL(None, 'scheme'))
+        self.assertEqual(URL().setdefault('SCHEME'), URL(None, 'scheme'))
+
+        # host lowercase
+        self.assertEqual(URL(None, '', 'HOST'), URL(None, '', 'host'))
+        self.assertEqual(URL().replace('', 'HOST'), URL(None, '', 'host'))
+        self.assertEqual(URL().setdefault('', 'HOST'), URL(None, '', 'host'))
+
+        # relative path without host
+        self.assertEqual(URL(path='rel').path, 'rel')
+        self.assertEqual(URL().replace(path='rel').path, 'rel')
+        self.assertEqual(URL().setdefault(path='rel').path, 'rel')
+
+        # relative path with host
+        self.assertEqual(URL(host='host', path='rel').path, '/rel')
+        self.assertEqual(URL().replace(host='host', path='rel').path, '/rel')
+        self.assertEqual(URL(host='host').replace(path='rel').path, '/rel')
+        self.assertEqual(URL(path='rel').replace(host='host').path, '/rel')
+        self.assertEqual(URL().setdefault(host='ho', path='rel').path, '/rel')
+        self.assertEqual(URL(host='ho').setdefault(path='rel').path, '/rel')
+        self.assertEqual(URL(path='rel').setdefault(host='ho').path, '/rel')
+
+        # relative path without ':' in first segment
+        self.assertEqual(URL(path='rel/at:ve').path, 'rel/at:ve')
+        self.assertEqual(str(URL(path='rel/at:ve')), 'rel/at:ve')
+        self.assertEqual(str(URL().replace(path='rel/at:ve')), 'rel/at:ve')
+        self.assertEqual(str(URL().setdefault(path='rel/at:ve')), 'rel/at:ve')
+
+        # relative path with ':' in first segment
+        self.assertEqual(URL(path='re:at').path, 're:at')
+        self.assertEqual(URL(path='re:at/ve').path, 're:at/ve')
+        self.assertEqual(URL().replace(path='re:at').path, 're:at')
+        self.assertEqual(URL().setdefault(path='re:at').path, 're:at')
+        self.assertEqual(str(URL(path='re:at')), './re:at')
+        self.assertEqual(str(URL(path='re:at/ve')), './re:at/ve')
+        self.assertEqual(str(URL().replace(path='re:at')), './re:at')
+        self.assertEqual(str(URL().setdefault(path='re:at')), './re:at')
+
+        # relative path with ':' in first segment and host or scheme
+        self.assertEqual(URL(None, 'sc', path='re:at').path, 're:at')
+        self.assertEqual(URL(None, 'sc').replace(path='re:at').path, 're:at')
+        self.assertEqual(str(URL(path='re:at').replace('sc')), 'sc:re:at')
+        self.assertEqual(str(URL(None, 'sc') + URL(path='re:at')), 'sc:re:at')
+        self.assertEqual(URL(None, '', 'ho', 're:at').path, '/re:at')
+        self.assertEqual(URL(None, '', 'ho').replace(path='re:at').path, '/re:at')
+        self.assertEqual(str(URL(path='re:at').replace(None, 'ho')), '//ho/re:at')
+        self.assertEqual(str(URL(None, '', 'ho') + URL(path='re:at')), '//ho/re:at')
 
     def test_unicode(self):
         url = (URL('http://пользователь@домен.ком/путь?запрос#фрагмент')
@@ -248,7 +300,7 @@ class InterfaceTests(unittest.TestCase):
 
     def test_replace(self):
         for url in [URL('htttp://user@google.com:8080/path?query#fragment'),
-                    URL(), URL('path'), URL('//host').replace(port=80)]:
+                    URL(), URL('path'), URL('//host:80')]:
             self.assertFalse(url is url.replace(host='strange'))
             self.assertEqual(url, url.replace())
             for idx, (field, value) in enumerate(zip(url._fields, url)):
@@ -258,14 +310,9 @@ class InterfaceTests(unittest.TestCase):
                 self.assertEqual(url.replace(**{field: ''})[idx], '')
                 # replace to some
                 if url.has_authority() and field == 'path':
-                    self.assertEqual(url.replace(**{field: 'some'})[idx], '/some')
+                    self.assertEqual(url.replace(**{field: 'an'})[idx], '/an')
                 else:
-                    self.assertEqual(url.replace(**{field: 'some'})[idx], 'some')
-
-        self.assertEqual(
-            URL().replace('SCHEME', 'HOST', '/PATH', '', '', 'AUTH', 30),
-            ('scheme', 'host', '/PATH', '', '', 'AUTH', '30')
-        )
+                    self.assertEqual(url.replace(**{field: 'an'})[idx], 'an')
 
         for url, authority in [(URL('a://b:c@d:5/f?g#h'), 'blah'),
                                (URL('a://blah/f?g#h'), '')]:
@@ -287,8 +334,6 @@ class InterfaceTests(unittest.TestCase):
             self.assertEqual(url.full_path, full_path)
             url = url.replace(full_path=orig_path)
             self.assertEqual(url.full_path, orig_path)
-
-        self.assertEqual(URL('//host/some').replace(path='path').path, '/path')
 
     def test_setdefault(self):
         empty = URL()

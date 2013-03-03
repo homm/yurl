@@ -57,14 +57,10 @@ class URL(URLTuple):
                     host, port = host[:_port_idx], _port
 
         else:
+            # If url has authority, path should be absolute.
             if userinfo or host or port:
                 if path and path[0] != '/':
                     path = '/' + path
-
-            # if url starts with path with ':'' in first segment
-            elif not scheme and path.partition('/')[0].find(':') > 0:
-                path = './' + path
-
 
         # | Although schemes are case-insensitive, the canonical form
         # | is lowercase. An implementation should only produce lowercase
@@ -91,6 +87,12 @@ class URL(URLTuple):
         # Escape path with slashes by adding explicit empty host.
         if base or path[0:2] == '//':
             base = '//' + base
+
+        elif not scheme and path:
+            # if url starts with path with ':'' in first segment
+            column_idx = path.find(':')
+            if column_idx > 0 and path.find('/', 0, column_idx) < 0:
+                base = './'
 
         if scheme:
             base = scheme + ':' + base
