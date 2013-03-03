@@ -113,7 +113,7 @@ Modify urls
 After parsing url can be modified in different ways.
 
 replace() method
-----------------
+~~~~~~~~~~~~~~~~
 
 You can use replace() method to change whole parts of url:
 
@@ -129,7 +129,7 @@ In addition to the usual attributes it takes shortcuts authority and full_path:
     http://google.com/two
 
 setdefault() method
--------------------
+~~~~~~~~~~~~~~~~~~~
 
 setdefault() replace parts with given if they don't exists in original url:
 
@@ -137,7 +137,7 @@ setdefault() replace parts with given if they don't exists in original url:
     https://google.com/q
 
 Url join
---------
+~~~~~~~~
 
 Join is analogue of urljoin() function from urlparse module. You can join two
 urls by adding one to another.
@@ -177,8 +177,8 @@ About library
 =============
 
 
-Why you should use yurl instead of urlparse
--------------------------------------------
+Why you might want to use yurl instead of urlparse
+--------------------------------------------------
 
 The short answer is urlparse is broken. If you're interested, here's detailed
 response.
@@ -249,8 +249,8 @@ response.
 I'm sure the list is not complete.
 
 
-Why you should use yurl instead of purl
----------------------------------------
+Why you might want to use yurl instead of purl
+----------------------------------------------
 
 Purl built on top of urlparse() and include almost all problems listed above.
 And some other:
@@ -358,13 +358,13 @@ Changelog
 ---------
 
 v.0.10
-------
+~~~~~~
 
 * method replace_from() removed
 * concatenation with string no longer aliasd with join
 * join always remove dots segments (as defined in rfc)
 
 v0.9
-----
+~~~~
 
 First release.
