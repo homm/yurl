@@ -338,7 +338,8 @@ class BenchmarkTests(unittest.TestCase):
     test_urls = ['https://user:info@yandex.ru:8080/path/to+the=ar?gum=ent#s',
                  'scheme:8080/path/to;the=ar?gum=ent#s',
                  'lucky-number:3456',
-                 '//host:80']
+                 '//host:80',
+                 '#frag']
 
     def setUp(self):
         from timeit import repeat
@@ -348,11 +349,14 @@ class BenchmarkTests(unittest.TestCase):
             setup0 += 'from urllib.parse import urlparse, urlsplit, urljoin\n'
         except ImportError:
             setup0 += 'from urlparse import urlparse, urlsplit, urljoin\n'
+
         try:
-            import cPickle
-            setup0 += 'import cPickle as pickle\n'
+            import purl
+            setup0 += 'import purl\n'
+            self.use_purl = True
         except ImportError:
-            setup0 += 'import pickle\n'
+            self.use_purl = False
+
         self.test = lambda stmt, setup='': min(repeat(stmt, setup0 + setup,
                                                       number=5000))
 
@@ -368,17 +372,22 @@ class BenchmarkTests(unittest.TestCase):
         print('\n=== Test parse ===')
         for url in self.test_urls:
             setup = "i = 0; url = {0}".format(repr(url))
-            self.one_try(url, setup,
-                         "URL(url + str(i)); i+=1",
-                         "urlsplit(url + str(i)); i+=1",
-                         "urlparse(url + str(i)); i+=1")
+            tests = ["URL(url + str(i)); i+=1",
+                     "urlsplit(url + str(i)); i+=1",
+                     "urlparse(url + str(i)); i+=1"]
+            if self.use_purl:
+                tests.append("purl.URL(url + str(i)); i+=1")
+            self.one_try(url, setup, *tests)
+
         print('  = with cache =')
         for url in self.test_urls:
             setup = "i = 0; url = {0}".format(repr(url))
-            self.one_try(url, setup,
-                         "CachedURL(url + str(i % 20)); i+=1",
-                         "urlsplit(url + str(i % 20)); i+=1",
-                         "urlparse(url + str(i % 20)); i+=1")
+            tests = ["CachedURL(url + str(i % 20)); i+=1",
+                     "urlsplit(url + str(i % 20)); i+=1",
+                     "urlparse(url + str(i % 20)); i+=1"]
+            if self.use_purl:
+                tests.append("purl.URL(url + str(i % 20)); i+=1")
+            self.one_try(url, setup, *tests)
 
     def test_concat(self):
         print('\n=== Test as_string() ===')
@@ -391,14 +400,6 @@ class BenchmarkTests(unittest.TestCase):
                          "splitted.geturl()",
                          "parsed.geturl()")
 
-        print('\n=== Test parse().as_string() ===')
-        for url in self.test_urls:
-            setup = "i = 0; url = {0}".format(repr(url))
-            self.one_try(url, setup,
-                         "URL(url + str(i)).as_string(); i+=1",
-                         "urlsplit(url + str(i)).geturl(); i+=1",
-                         "urlparse(url + str(i)).geturl(); i+=1")
-
     def test_join(self):
         join_cases = [('http://ya.ru/user/photos/id12324/photo3',
                        '../../../mikhail/photos/id6543/photo99?param'),
@@ -410,7 +411,7 @@ class BenchmarkTests(unittest.TestCase):
         for base, rel in join_cases:
             setup = "i = 0; base = {0}; rel = {1}".format(repr(base), repr(rel))
             self.one_try('{0} + {1}'.format(repr(base), repr(rel)), setup,
-                         "str(CachedURL(base) + URL(rel + str(i))); i+=1",
+                         "(CachedURL(base) + URL(rel + str(i))).as_string(); i+=1",
                          "urljoin(base, rel + str(i)); i+=1")
 
         print('\n  = result is parsed =')
