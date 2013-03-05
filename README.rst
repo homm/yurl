@@ -35,7 +35,7 @@ It also works with relative urls:
 
 URL() returns named tuple with scheme, host, path, query, fragment,
 userinfo and port properties. All properties is strings, even if they does not
-exists in url.
+exists in url. Port is guaranteed to consist of digits.
 
 Url also can be constructed from known parts:
 

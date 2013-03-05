@@ -1,5 +1,7 @@
 import re
-from collections import namedtuple, deque
+from collections import namedtuple
+
+from .utils import remove_dot_segments
 
 # This module based on rfc3986.
 
@@ -57,7 +59,9 @@ class URL(URLTuple):
                     host, port = host[:_port_idx], _port
 
         else:
-            # If url has authority, path should be absolute.
+            # | If a URI contains an authority component, then the path
+            # | component must either be empty or begin with a slash ("/")
+            # | character.
             if userinfo or host or port:
                 if path and path[0] != '/':
                     path = '/' + path
@@ -222,14 +226,13 @@ class URL(URLTuple):
     def __add__(self, other):
         # This method designed with one issue. By rfc delimeters without
         # following values are matter. For example:
-        # 'http://ya.ru/page' + '//?none' = 'http:'
+        # 'http://ya.ru/page' + '//?none' = 'http:?none'
         # 'http://ya.ru/page?param' + '?' = 'http://ya.ru/page'
         # But the parser makes no distinction between empty and undefined part.
         # 'http://ya.ru/page' + '//?none' = 'http://ya.ru/page?none'
         # 'http://ya.ru/page?param' + '?' = 'http://ya.ru/page?param'
         # Same bug also present in urllib.parse.urljoin.
         # I hope it will be fixed in future yurls.
-        # TODO: call remove_dot_segments() when path not modified.
 
         if not isinstance(other, URLTuple):
             raise NotImplementedError()
@@ -254,7 +257,7 @@ class URL(URLTuple):
                         path = parts[0] + parts[1] + path
 
         return URL.__new__(type(self), None, scheme, host,
-                           self.remove_dot_segments(path),
+                           remove_dot_segments(path),
                            query, fragment, userinfo, port)
 
     def __radd__(self, left):
@@ -300,24 +303,6 @@ class URL(URLTuple):
                            self[4] or fragment,
                            self[5] or userinfo,
                            self[6] or port)
-
-    ### Utils
-
-    @classmethod
-    def remove_dot_segments(cls, path):
-        stack = deque()
-        last = 0
-        for segment in path.split('/'):
-            if segment == '.':
-                pass
-            elif segment == '..':
-                if len(stack):
-                    stack.pop()
-            else:
-                stack.append(segment)
-        if path.endswith(('/.', '/..')):
-            stack.append('')
-        return '/'.join(stack)
 
     ### Python 2 to 3 compatibility
 
