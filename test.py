@@ -360,6 +360,7 @@ class InterfaceTests(unittest.TestCase):
         test_valid('/path', True, False)
         test_valid('path/', True, True)
         test_valid('./path/', True, True)
+        test_valid('?true', True, True)
 
         def test_ip(url, host_ip, host_ipv4):
             self.assertEqual(URL(url).is_host_ip(), host_ip)

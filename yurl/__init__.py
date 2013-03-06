@@ -149,10 +149,10 @@ class URL(URLTuple):
         return not self[0]
 
     def is_relative_path(self):
-        # Absolute path always starts with slash. Also paths with authority
-        # can not be relative.
-        return not self[2][:1] == '/' and not (
-            self[0] or self.has_authority())
+        # Relative-path url will not replace path during joining.
+        return not self[0] and (self[2][0] != '/'
+                                if self[2]
+                                else not self.has_authority())
 
     def is_host_ipv4(self):
         if self[1][:1] != '[':
