@@ -33,20 +33,16 @@ It also works with relative urls:
     URLBase(scheme='', host='', path='search',
      query='rls=en&q=yurl&redir_esc=', fragment='', userinfo='', port='')
 
-URL() returns named tuple with scheme, host, path, query, fragment,
-userinfo and port properties. All properties is strings, even if they does not
-exists in url. Port is guaranteed to consist of digits.
-
 Url also can be constructed from known parts:
 
     >>> print URL(host='google.com', path='search', query='q=url')
     //google.com/search?q=url
 
 
-Validation and information
---------------------------
+Validation
+----------
 
-Parsing is always successful, even if some parts have unescaped or
+Url parsing is always successful, even if some parts have unescaped or
 not allowed chars. After parsing you can call validate() method:
 
     >>> URL('//google:com').validate()
@@ -62,11 +58,28 @@ Validate() returns object itself or modified version:
     URLBase(scheme='', host='google.com', path='',
      query='', fragment='', userinfo='', port='80')
 
-While host, userinfo and port properties sometimes not useful, url object
-have property authority with these joined parts and has_authority method:
 
-    >>> URL('http://google.com:80').authority
-    'google.com:80'
+Get information
+---------------
+
+URL() returns named tuple with some additional properties. All properties
+is strings, even if they does not exists in url.
+
+.scheme .authority .path .query .fragment
+    Basic parts of url: *scheme://authority/path?query#fragment*
+
+.userinfo .host .port
+    Parts of authority: *userinfo@host:port*
+    Port is guaranteed to consist of digits.
+
+.full_path
+    Path, query and fragment joined together: *path?query#fragment*
+
+.username .authorization
+    Parts of userinfo: *username:authorization*
+
+Url object has method for checking authority existence:
+
     >>> URL('http://google.com:80').has_authority()
     True
 
