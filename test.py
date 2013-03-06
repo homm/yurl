@@ -283,6 +283,17 @@ class InterfaceTests(unittest.TestCase):
                     '?query#fragment']:
             self.assertEqual(URL(url).full_path, url)
 
+    def test_username_and_authorization(self):
+        for userinfo, un, az in [('user', 'user', ''),
+                                 ('user:', 'user', ''),
+                                 ('user:pass', 'user', 'pass'),
+                                 ('user:pass:buzz', 'user', 'pass:buzz'),
+                                 (':pass', '', 'pass'),
+                                 (':pass:buzz', '', 'pass:buzz'),
+                                 ('', '', ''), (':', '', ''), ('::', '', ':')]:
+            self.assertEqual(URL(userinfo=userinfo).username, un)
+            self.assertEqual(URL(userinfo=userinfo).authorization, az)
+
     def test_str(self):
         for url in ['', '//host', '//host/' 'scheme://host', '//host/path',
                     '?query', 'path?query', 'http:', 'http:?query',

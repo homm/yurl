@@ -116,6 +116,17 @@ class URL(URLTuple):
 
     ### Missing properties
 
+    # | The userinfo subcomponent may consist of a user name and, optionally,
+    # | scheme-specific information about how to gain authorization to access
+    # | the resource.
+    @property
+    def username(self):
+        return self[5].partition(':')[0]
+
+    @property
+    def authorization(self):
+        return self[5].partition(':')[2]
+
     @property
     def authority(self):
         authority = self[1]
