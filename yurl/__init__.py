@@ -80,17 +80,9 @@ class URL(URLTuple):
     ### Serialization
 
     def __unicode__(self):
-        scheme, base, path, query, fragment, userinfo, port = self
-
-        if port:
-            base += ':' + port
-
-        elif ':' in base:
-            if base[base.rfind(':') + 1:].isdigit():
-                base += ':'
-
-        if userinfo:
-            base = userinfo + '@' + base
+        scheme = self[0]
+        path = self[2]
+        base = self.authority
 
         # Escape path with slashes by adding explicit empty host.
         if base or path[0:2] == '//':
@@ -105,13 +97,7 @@ class URL(URLTuple):
         if scheme:
             base = scheme + ':' + base
 
-        if query:
-            path += '?' + query
-
-        if fragment:
-            path += '#' + fragment
-
-        return base + path
+        return base + self.full_path
 
     as_string = __unicode__
 
@@ -133,21 +119,31 @@ class URL(URLTuple):
 
     @property
     def authority(self):
-        authority = self[1]
+        base = self[1]
         userinfo, port = self[5:7]
+
         if port:
-            authority += ':' + port
+            base += ':' + port
+
+        elif ':' in base:
+            if base[base.rfind(':') + 1:].isdigit():
+                base += ':'
+
         if userinfo:
-            return userinfo + '@' + authority
-        return authority
+            base = userinfo + '@' + base
+
+        return base
 
     @property
     def full_path(self):
         path, query, fragment = self[2:5]
+
         if query:
             path += '?' + query
+
         if fragment:
             path += '#' + fragment
+
         return path
 
     ### Information
