@@ -272,6 +272,15 @@ class InterfaceTests(unittest.TestCase):
         dump = pickle.dumps(URL('a://b:c@d:5/f?g#h'))
         self.assertEqual(pickle.loads(dump), URL('a://b:c@d:5/f?g#h'))
 
+        global _test_picklingURL
+        class _test_picklingURL(URL):
+            def __new__(cls, path):
+                return super(_test_picklingURL, cls).__new__(cls, path)
+
+        url = _test_picklingURL('a://b:c@d:5/f?g#h')
+        self.assertEqual(pickle.loads(pickle.dumps(url)), url)
+        self.assertEqual(type(pickle.loads(pickle.dumps(url))), type(url))
+
     def test_authority(self):
         for url in ['', 'ya.ru', 'ya.ru:80', ':80', 'info@ya.ru',
                     'info@', 'info@:80']:
