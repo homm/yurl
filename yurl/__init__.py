@@ -125,11 +125,16 @@ class URL(URLTuple):
             base += ':' + port
 
         elif ':' in base:
-            if base[base.rfind(':') + 1:].isdigit():
+            last = base[base.rfind(':') + 1:]
+            if not last or last.isdigit():
                 base += ':'
 
         if userinfo:
             base = userinfo + '@' + base
+
+        elif '@' in base:
+            base = '@' + base
+
 
         return base
 

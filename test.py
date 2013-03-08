@@ -389,6 +389,21 @@ class InterfaceTests(unittest.TestCase):
         self.assertTrue(URL('#url'))
         self.assertFalse(URL('//@:?#'))
 
+    def test_stress_authority(self):
+        # Authority is most ambiguous part of url. Invalid host can contatin
+        # ':' and '@' (path for example can not contain '?'. And query
+        # can not contain '#'). The host '//no:99:' will be parsed as 'no:99'
+        # and in next recomposition it can be written as '//no:99'. But parsing
+        # of '//no:99:' and '//no:99' will be different.
+        from itertools import permutations
+        # 9! = 362880 cases. But with equal parts we have only
+        # 9! / 5! / 2! / 2! = 756 cases.
+        for case in set(permutations('::@@77777')):
+            url = URL('//' + ''.join(case))
+            # check is all parts defined in original url is defined in parsed
+            self.assertEqual(url, URL(url.as_string()))
+            self.assertEqual(url, URL('//' + url.authority))
+
 
 @unittest.skipUnless('-bench' in sys.argv, "run with -bench arg")
 class BenchmarkTests(unittest.TestCase):
