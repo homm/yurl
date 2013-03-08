@@ -188,8 +188,6 @@ class URL(URLTuple):
     # '[' and ']' the only chars not allowed in userinfo and not delimiters
     _valid_userinfo_re = re.compile(r'^[^/?\#@\[\]]+$').match
     _valid_reg_name_re = re.compile(r'^[^/?\#@\[\]:]+$').match
-    _valid_path_re = re.compile(r'^[^?\#]+$').match
-    _valid_query_re = re.compile(r'^[^\#]+$').match
     # This primitive regular expression not match complicated ip literal.
     _valid_ip_literal_re = re.compile(r'''
         ^(?:
@@ -222,13 +220,11 @@ class URL(URLTuple):
         # There should be no scheme and authority and first segment of path
         # should contain ':' or starts with '//'. But this library not about
         # punish user. We can escape this paths when formatting string.
-        if self[4]:
-            if not self._valid_path_re(self[4]):
-                raise InvalidPath()
+        if '?' in self[4] or '#' in self[4]:
+            raise InvalidPath()
 
-        if self[5]:
-            if not self._valid_query_re(self[5]):
-                raise InvalidQuery()
+        if '#' in self[5]:
+            raise InvalidQuery()
 
         return self
 
