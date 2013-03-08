@@ -16,8 +16,8 @@ class InvalidPath(ValueError): pass
 class InvalidQuery(ValueError): pass
 
 
-URLTuple = namedtuple('URLBase', 'scheme host path query fragment '
-                                 'userinfo port')
+URLTuple = namedtuple('URLBase', 'scheme userinfo host port '
+                                 'path query fragment')  # 4, 5, 6
 
 
 class URL(URLTuple):
@@ -41,8 +41,8 @@ class URL(URLTuple):
         \#?(.*)                     # fragment
         ''', re.VERBOSE | re.DOTALL).match
 
-    def __new__(cls, url=None, scheme='', host='', path='', query='',
-                fragment='', userinfo='', port=''):
+    def __new__(cls, url=None, scheme='', userinfo='', host='', port='',
+                path='', query='', fragment=''):
         if url is not None:
             # All other arguments are ignored.
             (scheme, userinfo, host, port,
@@ -74,14 +74,14 @@ class URL(URLTuple):
         # | should use lowercase for registered names and hexadecimal
         # | addresses for the sake of uniformity.
 
-        return tuple.__new__(cls, (scheme.lower(), host.lower(), path, query,
-                                   fragment, userinfo, str(port)))
+        return tuple.__new__(cls, (scheme.lower(), userinfo, host.lower(),
+                                   str(port), path, query, fragment))
 
     ### Serialization
 
     def __unicode__(self):
         scheme = self[0]
-        path = self[2]
+        path = self[4]
         base = self.authority
 
         # Escape path with slashes by adding explicit empty host.
@@ -111,16 +111,15 @@ class URL(URLTuple):
     # | the resource.
     @property
     def username(self):
-        return self[5].partition(':')[0]
+        return self[1].partition(':')[0]
 
     @property
     def authorization(self):
-        return self[5].partition(':')[2]
+        return self[1].partition(':')[2]
 
     @property
     def authority(self):
-        base = self[1]
-        userinfo, port = self[5:7]
+        userinfo, base, port = self[1:4]
 
         if port:
             base += ':' + port
@@ -136,7 +135,7 @@ class URL(URLTuple):
 
     @property
     def full_path(self):
-        path, query, fragment = self[2:5]
+        path, query, fragment = self[4:7]
 
         if query:
             path += '?' + query
@@ -152,7 +151,8 @@ class URL(URLTuple):
         return any(self)
 
     def has_authority(self):
-        return bool(self[1] or self[5] or self[6])
+        # micro optimization: self[2] hits more often then others
+        return bool(self[2] or self[1] or self[3])
 
     def is_relative(self):
         # In terms of rfc relative url have no scheme.
@@ -161,13 +161,13 @@ class URL(URLTuple):
 
     def is_relative_path(self):
         # Relative-path url will not replace path during joining.
-        return not self[0] and (self[2][0] != '/'
-                                if self[2]
+        return not self[0] and (self[4][0] != '/'
+                                if self[4]
                                 else not self.has_authority())
 
     def is_host_ipv4(self):
-        if self[1][:1] != '[':
-            parts = self[1].split('.')
+        if self[2][:1] != '[':
+            parts = self[2].split('.')
             if len(parts) == 4 and all(part.isdigit() for part in parts):
                 if all(int(part, 10) < 256 for part in parts):
                     return True
@@ -177,7 +177,7 @@ class URL(URLTuple):
         if self.is_host_ipv4():
             return True
 
-        if self[1][:1] == '[' and self[1][-1:] == ']':
+        if self[2][:1] == '[' and self[2][-1:] == ']':
             return True
 
         return False
@@ -204,11 +204,11 @@ class URL(URLTuple):
             if not self._valid_scheme_re(self[0]):
                 raise InvalidScheme()
 
-        if self[5]:
-            if not self._valid_userinfo_re(self[5]):
+        if self[1]:
+            if not self._valid_userinfo_re(self[1]):
                 raise InvalidUserinfo()
 
-        host = self[1]
+        host = self[2]
         if host:
             if host[:1] == '[' and host[-1:] == ']':
                 if not self._valid_ip_literal_re(host[1:-1]):
@@ -222,12 +222,12 @@ class URL(URLTuple):
         # There should be no scheme and authority and first segment of path
         # should contain ':' or starts with '//'. But this library not about
         # punish user. We can escape this paths when formatting string.
-        if self[2]:
-            if not self._valid_path_re(self[2]):
+        if self[4]:
+            if not self._valid_path_re(self[4]):
                 raise InvalidPath()
 
-        if self[3]:
-            if not self._valid_query_re(self[3]):
+        if self[5]:
+            if not self._valid_query_re(self[5]):
                 raise InvalidQuery()
 
         return self
@@ -248,28 +248,27 @@ class URL(URLTuple):
         if not isinstance(other, URLTuple):
             raise NotImplementedError()
 
-        scheme, host, path, query, fragment, userinfo, port = other
+        scheme, userinfo, host, port, path, query, fragment = other
 
         if not scheme:
             scheme = self[0]
 
             if not (host or userinfo or port):
-                host, userinfo, port = self[1], self[5], self[6]
+                userinfo, host, port = self[1:4]
 
                 if not path:
-                    path = self[2]
+                    path = self[4]
 
                     if not query:
-                        query = self[3]
+                        query = self[5]
 
                 else:
                     if path[0] != '/':
-                        parts = self[2].rpartition('/')
+                        parts = self[4].rpartition('/')
                         path = parts[0] + parts[1] + path
 
-        return URL.__new__(type(self), None, scheme, host,
-                           remove_dot_segments(path),
-                           query, fragment, userinfo, port)
+        return URL.__new__(type(self), None, scheme, userinfo, host, port,
+                           remove_dot_segments(path), query, fragment)
 
     def __radd__(self, left):
         # if other is instance of URL(), __radd__() should not be called.
@@ -278,42 +277,42 @@ class URL(URLTuple):
 
         raise NotImplementedError()
 
-    def replace(self, scheme=None, host=None, path=None, query=None,
-                fragment=None, userinfo=None, port=None, authority=None,
-                full_path=None):
+    def replace(self, scheme=None, userinfo=None, host=None, port=None,
+                path=None, query=None, fragment=None,
+                authority=None, full_path=None):
         if authority is not None:
             if host or userinfo or port:
                 raise TypeError()
 
             # Use original URL just for parse.
-            _, host, _, _, _, userinfo, port = URL('//' + authority)
+            userinfo, host, port = URL('//' + authority)[1:4]
 
         if full_path is not None:
             if path or query or fragment:
                 raise TypeError()
 
             # Use original URL just for parse.
-            path, query, fragment = URL(full_path)[2:5]
+            path, query, fragment = URL(full_path)[4:7]
 
         return URL.__new__(type(self), None,
                            self[0] if scheme is None else scheme,
-                           self[1] if host is None else host,
-                           self[2] if path is None else path,
-                           self[3] if query is None else query,
-                           self[4] if fragment is None else fragment,
-                           self[5] if userinfo is None else userinfo,
-                           self[6] if port is None else port)
+                           self[1] if userinfo is None else userinfo,
+                           self[2] if host is None else host,
+                           self[3] if port is None else port,
+                           self[4] if path is None else path,
+                           self[5] if query is None else query,
+                           self[6] if fragment is None else fragment)
 
-    def setdefault(self, scheme='', host='', path='', query='', fragment='',
-                   userinfo='', port=''):
+    def setdefault(self, scheme='', userinfo='', host='', port='', path='',
+                   query='', fragment=''):
         return URL.__new__(type(self), None,
                            self[0] or scheme,
-                           self[1] or host,
-                           self[2] or path,
-                           self[3] or query,
-                           self[4] or fragment,
-                           self[5] or userinfo,
-                           self[6] or port)
+                           self[1] or userinfo,
+                           self[2] or host,
+                           self[3] or port,
+                           self[4] or path,
+                           self[5] or query,
+                           self[6] or fragment)
 
     ### Python 2 to 3 compatibility
 

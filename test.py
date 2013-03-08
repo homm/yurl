@@ -24,7 +24,7 @@ class ParseTests(unittest.TestCase):
                 userinfo='', port='', invalid=None, urlsplit=True):
         orih_url = url
         url = URL(url)
-        splitted = (scheme, host, path, query, fragment, userinfo, port)
+        splitted = (scheme, userinfo, host, port, path, query, fragment)
         self.assertEqual(url, splitted)
         self.assertEqual(URL(None, *splitted), splitted)
         self.assertEqual(URL(None, *url), splitted)
@@ -138,7 +138,7 @@ class InterfaceTests(unittest.TestCase):
     def test_constructor(self):
         # args
         self.assertEqual(URL('a://b:c@d:5/f?g#h'),
-                         URL(None, 'a', 'd', '/f', 'g', 'h', 'b:c', '5'))
+                         URL(None, 'a', 'b:c', 'd', '5', '/f', 'g', 'h'))
         # kwargs
         self.assertEqual(URL('a://b:c@d:5/f?g#h'),
                          URL(scheme='a', userinfo='b:c', host='d', port='5',
@@ -158,9 +158,9 @@ class InterfaceTests(unittest.TestCase):
         self.assertEqual(URL().setdefault('SCHEME'), URL(None, 'scheme'))
 
         # host lowercase
-        self.assertEqual(URL(None, '', 'HOST'), URL(None, '', 'host'))
-        self.assertEqual(URL().replace('', 'HOST'), URL(None, '', 'host'))
-        self.assertEqual(URL().setdefault('', 'HOST'), URL(None, '', 'host'))
+        self.assertEqual(URL(None, host='HOST'), URL(None, host='host'))
+        self.assertEqual(URL().replace(host='HOST'), URL(None, host='host'))
+        self.assertEqual(URL().setdefault(host='HOST'), URL(None, host='host'))
 
         # relative path without host
         self.assertEqual(URL(path='rel').path, 'rel')
@@ -197,10 +197,10 @@ class InterfaceTests(unittest.TestCase):
         self.assertEqual(URL(None, 'sc').replace(path='re:at').path, 're:at')
         self.assertEqual(str(URL(path='re:at').replace('sc')), 'sc:re:at')
         self.assertEqual(str(URL(None, 'sc') + URL(path='re:at')), 'sc:re:at')
-        self.assertEqual(URL(None, '', 'ho', 're:at').path, '/re:at')
-        self.assertEqual(URL(None, '', 'ho').replace(path='re:at').path, '/re:at')
-        self.assertEqual(str(URL(path='re:at').replace(None, 'ho')), '//ho/re:at')
-        self.assertEqual(str(URL(None, '', 'ho') + URL(path='re:at')), '//ho/re:at')
+        self.assertEqual(URL(None, host='ho', path='re:at').path, '/re:at')
+        self.assertEqual(URL(None, host='ho').replace(path='re:at').path, '/re:at')
+        self.assertEqual(str(URL(path='re:at').replace(host='ho')), '//ho/re:at')
+        self.assertEqual(str(URL(None, host='ho') + URL(path='re:at')), '//ho/re:at')
 
     def test_unicode(self):
         url = (URL('http://пользователь@домен.ком/путь?запрос#фрагмент')
