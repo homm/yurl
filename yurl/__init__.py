@@ -1,7 +1,7 @@
 import re
 from collections import namedtuple
 
-from .utils import remove_dot_segments
+from .utils import remove_dot_segments, _restore
 
 # This module based on rfc3986.
 
@@ -102,7 +102,7 @@ class URL(URLTuple):
     as_string = __unicode__
 
     def __reduce__(self):
-        return type(self), (None,) + tuple(self)
+        return _restore, (type(self), tuple(self))
 
     ### Missing properties
 

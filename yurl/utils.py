@@ -1,6 +1,10 @@
 from collections import deque
 
 
+def _restore(cls, args):
+    return tuple.__new__(cls, args)
+
+
 def remove_dot_segments(path):
     stack = deque()
     last = 0
