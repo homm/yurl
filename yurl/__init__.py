@@ -58,13 +58,18 @@ class URL(URLTuple):
                 if not _port or _port.isdigit():
                     host, port = host[:_port_idx], _port
 
-        else:
-            # | If a URI contains an authority component, then the path
-            # | component must either be empty or begin with a slash ("/")
-            # | character.
+        return cls._create_and_fix(scheme, userinfo, host, port, path,
+                                   query, fragment)
+
+    @classmethod
+    def _create_and_fix(cls, scheme, userinfo, host, port, path,
+                        query, fragment):
+        # | If a URI contains an authority component, then the path
+        # | component must either be empty or begin with a slash ("/")
+        # | character.
+        if path and path[0] != '/':
             if userinfo or host or port:
-                if path and path[0] != '/':
-                    path = '/' + path
+                path = '/' + path
 
         # | Although schemes are case-insensitive, the canonical form
         # | is lowercase. An implementation should only produce lowercase
@@ -134,7 +139,6 @@ class URL(URLTuple):
 
         elif '@' in base:
             base = '@' + base
-
 
         return base
 
@@ -268,8 +272,8 @@ class URL(URLTuple):
                         parts = self[4].rpartition('/')
                         path = parts[0] + parts[1] + path
 
-        return URL.__new__(type(self), None, scheme, userinfo, host, port,
-                           remove_dot_segments(path), query, fragment)
+        return self._create_and_fix(scheme, userinfo, host, port,
+                                    remove_dot_segments(path), query, fragment)
 
     def __radd__(self, left):
         # if other is instance of URL(), __radd__() should not be called.
@@ -295,25 +299,23 @@ class URL(URLTuple):
             # Use original URL just for parse.
             path, query, fragment = URL(full_path)[4:7]
 
-        return URL.__new__(type(self), None,
-                           self[0] if scheme is None else scheme,
-                           self[1] if userinfo is None else userinfo,
-                           self[2] if host is None else host,
-                           self[3] if port is None else port,
-                           self[4] if path is None else path,
-                           self[5] if query is None else query,
-                           self[6] if fragment is None else fragment)
+        return self._create_and_fix(self[0] if scheme is None else scheme,
+                                    self[1] if userinfo is None else userinfo,
+                                    self[2] if host is None else host,
+                                    self[3] if port is None else port,
+                                    self[4] if path is None else path,
+                                    self[5] if query is None else query,
+                                    self[6] if fragment is None else fragment)
 
     def setdefault(self, scheme='', userinfo='', host='', port='', path='',
                    query='', fragment=''):
-        return URL.__new__(type(self), None,
-                           self[0] or scheme,
-                           self[1] or userinfo,
-                           self[2] or host,
-                           self[3] or port,
-                           self[4] or path,
-                           self[5] or query,
-                           self[6] or fragment)
+        return self._create_and_fix(self[0] or scheme,
+                                    self[1] or userinfo,
+                                    self[2] or host,
+                                    self[3] or port,
+                                    self[4] or path,
+                                    self[5] or query,
+                                    self[6] or fragment)
 
     ### Python 2 to 3 compatibility
 
