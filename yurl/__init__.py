@@ -156,8 +156,12 @@ class URL(URLTuple):
 
     ### Information
 
+    @property
+    def _data(self):
+        return self[0:7]
+
     def __nonzero__(self):
-        return any(self)
+        return any(self._data)
 
     def has_authority(self):
         # micro optimization: self[2] hits more often then others
@@ -253,7 +257,7 @@ class URL(URLTuple):
         if not isinstance(other, URLTuple):
             raise NotImplementedError()
 
-        scheme, userinfo, host, port, path, query, fragment = other
+        scheme, userinfo, host, port, path, query, fragment = other._data
 
         if not scheme:
             scheme = self[0]

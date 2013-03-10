@@ -25,9 +25,9 @@ class ParseTests(unittest.TestCase):
         orih_url = url
         url = URL(url)
         splitted = (scheme, userinfo, host, port, path, query, fragment)
-        self.assertEqual(url, splitted)
-        self.assertEqual(URL(None, *splitted), splitted)
-        self.assertEqual(URL(None, *url), splitted)
+        self.assertEqual(url._data, splitted)
+        self.assertEqual(URL(None, *splitted)._data, splitted)
+        self.assertEqual(URL(None, *url._data)._data, splitted)
 
         if invalid:
             self.assertRaises(invalid, url.validate)
@@ -323,7 +323,7 @@ class InterfaceTests(unittest.TestCase):
                     URL(), URL('path'), URL('//host:80')]:
             self.assertFalse(url is url.replace(host='strange'))
             self.assertEqual(url, url.replace())
-            for idx, (field, value) in enumerate(zip(url._fields, url)):
+            for idx, (field, value) in enumerate(zip(url._fields, url._data)):
                 # replase to same
                 self.assertEqual(url.replace(**{field: value}), url)
                 # clear
@@ -360,10 +360,10 @@ class InterfaceTests(unittest.TestCase):
         full1 = URL('scheme://user@host:80/path?query#frgment')
         full2 = URL('an://oth@er:33/full?url#!!')
 
-        self.assertEqual(empty.setdefault(*full1), full1)
-        self.assertEqual(full1.setdefault(*full2), full1)
+        self.assertEqual(empty.setdefault(*full1._data), full1)
+        self.assertEqual(full1.setdefault(*full2._data), full1)
 
-        for idx, (field, value) in enumerate(zip(full1._fields, full1)):
+        for idx, (field, value) in enumerate(zip(full1._fields, full1._data)):
             self.assertEqual(empty.setdefault(**{field: value}),
                              empty.replace(**{field: value}))
             self.assertEqual(empty.setdefault(**{field: value})[idx], value)
