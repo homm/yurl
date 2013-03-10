@@ -1,7 +1,8 @@
 import re
 from collections import namedtuple
 
-from .utils import _restore, split_url, remove_dot_segments
+from .utils import (_restore, split_url, decode_url, decode_url_component,
+                    remove_dot_segments)
 
 # This module based on rfc3986.
 
