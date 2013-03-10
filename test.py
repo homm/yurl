@@ -9,7 +9,7 @@ except ImportError:
 
 from yurl import (URL, InvalidScheme as Scheme, InvalidUserinfo as Userinfo,
                   InvalidHost as Host, InvalidPath as Path,
-                  InvalidQuery as Query, decode_url_component)
+                  InvalidQuery as Query, decode_url, decode_url_component)
 
 
 class ParseTests(unittest.TestCase):
@@ -449,6 +449,15 @@ class UtilsTests(unittest.TestCase):
                          ('%3a%3', ':%3'), ('%3a', ':'),
                          ('%20', '%20'), ('%e2%8c%98', '%e2%8c%98')]:
             self.assertEqual(decode_url_component(src), dst)
+
+    def test_decode_url(self):
+        for src, dst in [('какая-то строка', 'какая-то строка'),
+                         ('%D1%85%D0%B0%D0%B1%D1%80', 'хабр'),
+                         ('sch%3a%2f%2fhst%2fph', 'sch%3a%2f%2fhst%2fph'),
+                         ('%25%25', '%%'), ('%25%2', '%%2'), ('%25%', '%%'),
+                         ('%2%25', '%2%'), ('%%25', '%%')]:
+            self.assertEqual(decode_url(src), dst)
+        self.assertEqual(decode_url('%f5%e0%e1%f0', 'windows-1251'), 'хабр')
 
 
 @unittest.skipUnless('-bench' in sys.argv, "run with -bench arg")
