@@ -1,7 +1,7 @@
 import re
 from collections import namedtuple
 
-from .utils import remove_dot_segments, _restore
+from .utils import _restore, split_url, remove_dot_segments
 
 # This module based on rfc3986.
 
@@ -28,35 +28,10 @@ class URL(URLTuple):
     """
     __slots__ = ()
 
-    # This is not validating regexp.
-    # It splits url to unambiguous parts according RFC.
-    _split_re = re.compile(r'''
-        (?:([^:/?#]+):)?            # scheme
-        (?://                       # authority
-            (?:([^/?\#@]*)@)?       # userinfo
-            ([^/?\#]*)()            # host:port
-        )?
-        ([^?\#]*)                   # path
-        \??([^\#]*)                 # query
-        \#?(.*)                     # fragment
-        ''', re.VERBOSE | re.DOTALL).match
-
     def __new__(cls, url=None, scheme='', userinfo='', host='', port='',
                 path='', query='', fragment=''):
         if url is not None:
-            # All other arguments are ignored.
-            (scheme, userinfo, host, port,
-             path, query, fragment) = cls._split_re(url).groups('')
-
-            # Host itself can contain digits and ':', so we cant use regexp.
-            # It is bit different from other behaviors: instead of splitting
-            # as is, and raise on validate, we split port only with digits.
-            # I believe this is expected behavior.
-            _port_idx = host.rfind(':')
-            if _port_idx >= 0:
-                _port = host[_port_idx + 1:]
-                if not _port or _port.isdigit():
-                    host, port = host[:_port_idx], _port
+            return cls._create_and_fix(*split_url(url))
 
         return cls._create_and_fix(scheme, userinfo, host, port, path,
                                    query, fragment)
