@@ -254,13 +254,6 @@ class URL(URLTuple):
         return self._create_and_fix(scheme, userinfo, host, port,
                                     remove_dot_segments(path), query, fragment)
 
-    def __radd__(self, left):
-        # if other is instance of URL(), __radd__() should not be called.
-        if type(left) == URLTuple:
-            return URL.__add__(left, self)
-
-        raise NotImplementedError()
-
     def replace(self, scheme=None, userinfo=None, host=None, port=None,
                 path=None, query=None, fragment=None,
                 authority=None, full_path=None):
