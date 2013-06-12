@@ -398,6 +398,15 @@ class InterfaceTests(unittest.TestCase):
         self.assertTrue(URL('#url'))
         self.assertFalse(URL('//@:?#'))
 
+    def test_decode(self):
+        for enc, dec in [('http://%D0%BF%D1%8C%D0%B5%D1%80@local.com/'
+                          '%D0%B7%D0%B0%D0%BF%D0%B8%D1%81%D0%B8',
+                          'http://пьер@local.com/записи'),
+                         ('/%2525', '/%25')]:
+            self.assertEqual(URL(enc).decode()._data, URL(dec)._data)
+            self.assertEqual(URL(enc).decode().as_string(), dec)
+            self.assertEqual(URL(enc).decode().decode().as_string(), dec)
+
     def test_stress_authority(self):
         # Authority is most ambiguous part of url. Invalid host can contatin
         # ':' and '@' (path for example can not contain '?'. And query
@@ -405,7 +414,7 @@ class InterfaceTests(unittest.TestCase):
         # and in next recomposition it can be written as '//no:99'. But parsing
         # of '//no:99:' and '//no:99' will be different.
 
-        # case generation:
+        # # case generation:
         # from re import sub
         # from itertools import permutations
         # cases = set(sub('\d+', '7', ''.join(case))
@@ -457,7 +466,8 @@ class UtilsTests(unittest.TestCase):
                          ('%25%25', '%%'), ('%25%2', '%%2'), ('%25%', '%%'),
                          ('%2%25', '%2%'), ('%%25', '%%')]:
             self.assertEqual(decode_url(src), dst)
-        self.assertEqual(decode_url('%f5%e0%e1%f0', 'windows-1251'), 'хабр')
+        self.assertEqual(decode_url('%f5%e0%e1%f0ахабр', 'windows-1251'),
+                         'хабрахабр')
 
 
 @unittest.skipUnless('-bench' in sys.argv, "run with -bench arg")

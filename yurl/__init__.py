@@ -18,7 +18,7 @@ class InvalidQuery(ValueError): pass
 
 
 URLTuple = namedtuple('URLBase', 'scheme userinfo host port '
-                                 'path query fragment')  # 4, 5, 6
+                                 'path query fragment decoded')  # 4, 5, 6, 7
 
 
 class URL(URLTuple):
@@ -31,6 +31,7 @@ class URL(URLTuple):
 
     def __new__(cls, url=None, scheme='', userinfo='', host='', port='',
                 path='', query='', fragment=''):
+
         if url is not None:
             return cls._create_and_fix(*split_url(url))
 
@@ -39,7 +40,7 @@ class URL(URLTuple):
 
     @classmethod
     def _create_and_fix(cls, scheme, userinfo, host, port, path,
-                        query, fragment):
+                        query, fragment, decoded=False):
         # | If a URI contains an authority component, then the path
         # | component must either be empty or begin with a slash ("/")
         # | character.
@@ -56,7 +57,19 @@ class URL(URLTuple):
         # | addresses for the sake of uniformity.
 
         return tuple.__new__(cls, (scheme.lower(), userinfo, host.lower(),
-                                   str(port), path, query, fragment))
+                                   str(port), path, query, fragment, decoded))
+
+    def decode(self, encoding='utf-8', errors='replace'):
+        if self[7]:
+            return self
+        return tuple.__new__(type(self), (self[0],
+                                          decode_url(self[1], encoding, errors),
+                                          decode_url(self[2], encoding, errors),
+                                          self[3],
+                                          decode_url(self[4], encoding, errors),
+                                          decode_url(self[5], encoding, errors),
+                                          decode_url(self[6], encoding, errors),
+                                          True))
 
     ### Serialization
 

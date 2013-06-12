@@ -176,6 +176,35 @@ And not associative in general:
     //google/path/path
 
 
+Decode url
+----------
+
+All chars in url is divided to three groups: delimeters, subdelimeters and
+unreserved chars. Unreserved chars do not affect the parsing and can be encoded
+or decoded at any time. To decode unreserved chars you can call decode()
+method. Defaul encoding is utf-8.
+
+    >>> url = '%D1%81%D1%85%D0%B5%D0%BC%D0%B0%3A%D0%BF%D1%83%D1%82%D1%8C'
+    >>> print URL(url).decode()
+    схема%3Aпуть
+
+If you want decode all chars, you should apply decode_url_component()
+function to url component:
+
+    >>> from yurl import decode_url_component
+    >>> print decode_url_component(URL(url).decode().path)
+    схема:путь
+
+You can also omit decode method if you pass encoding in decode_url_component():
+
+    >>> print decode_url_component(url, 'utf-8')
+    схема:путь
+
+If you do not pass encoding, only reserved chars will be decoded:
+
+    >>> print decode_url_component(url)
+    %D1%81%D1%85%D0%B5%D0%BC%D0%B0:%D0%BF%D1%83%D1%82%D1%8C
+
 Cache url parsing
 -----------------
 
@@ -188,6 +217,59 @@ But if you parse the same link again and again you can use CachedURL:
 =============
 About library
 =============
+
+
+Decisions
+---------
+
+Rfc define format of valid url and ways to interact with it. But sometimes we
+need to interact invalid urls. And RFC's not much help with it. So this library
+has lots of decisions.
+
+*   Many libraries do not allow scheme or authority with invalid chars. Rfc
+    unambiguously define format of this parts. So we can say 'sche_me:path'
+    can not be scheme because of underscore and should be parsed as path:
+
+    >>> urlsplit('sche_me:path')[:]
+    ('', '', 'sche_me:path', '', '')
+
+    The problem is rfc also defines that the first segment of the path can not
+    contain colon. I believe the right way is to split url as is and then
+    validate if necessary.
+
+    >>> urlsplit('sche_me:path')[:]
+    ('sche_me', '', 'path', '', '')
+
+*   Rfc define two operations against url: parse and join. As long as we can
+    construct url from parts and replace parts we should sometimes fix
+    this parts. For example url with authority can not be relative.
+    And relative url can not starts with // or contain : in first path segment.
+    These fixes can be done while url constructing or while recomposition.
+    First way may be wrong because we can apply unnecessary in future fix:
+
+    # This is example of wrong behavior.
+    >>> print URL("//host") + URL(path="//path")
+    //host////path  # now path have four slashes
+
+    Second way is wrong when we replace some parts:
+
+    # This is example of wrong behavior.
+    >>> print URL("rel/path").replace(host='host').path
+    rel/path  # path is relative even if host there
+
+    So I divide all fixes to real fixes:
+
+    # path can not be relative when host present
+    >>> print URL("rel/path").replace(host='host').path
+    /rel/path
+
+    And escapes which should be applied on recomposition:
+
+    # url starts with path can not contain ':' in first path segment
+    >>> print URL(path="rel:path")
+    ./rel:path
+    >>> print URL(path="rel:path").path
+    rel:path
 
 
 Why you might want to use yurl instead of urlparse
