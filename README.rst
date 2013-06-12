@@ -24,14 +24,14 @@ To parse url into parts, pass string as first argument to URL() constructor:
 
     >>> from yurl import URL
     >>> URL('https://www.google.ru/search?q=yurl')
-    URLBase(scheme='https', host='www.google.ru', path='/search',
-     query='q=yurl', fragment='', userinfo='', port='')
+    URLBase(scheme='https', userinfo=u'', host='www.google.ru', port='',
+     path='/search', query='q=yurl', fragment='', decoded=False)
 
 It also works with relative urls:
 
     >>> URL('search?rls=en&q=yurl&redir_esc=')
-    URLBase(scheme='', host='', path='search',
-     query='rls=en&q=yurl&redir_esc=', fragment='', userinfo='', port='')
+    URLBase(scheme=u'', userinfo=u'', host=u'', port='', path='search',
+     query='rls=en&q=yurl&redir_esc=', fragment='', decoded=False)
 
 Url also can be constructed from known parts:
 
@@ -55,8 +55,8 @@ not allowed chars. After parsing you can call validate() method:
 Validate() returns object itself or modified version:
 
     >>> URL('//google.com:80').validate()
-    URLBase(scheme='', host='google.com', path='',
-     query='', fragment='', userinfo='', port='80')
+    URLBase(scheme=u'', userinfo=u'', host='google.com', port='80',
+     path='', query='', fragment='', decoded=False)
 
 
 Get information
@@ -247,25 +247,25 @@ has lots of decisions.
     These fixes can be done while url constructing or while recomposition.
     First way may be wrong because we can apply unnecessary in future fix:
 
-    # This is example of wrong behavior.
+    >>> # This is example of wrong behavior.
     >>> print URL("//host") + URL(path="//path")
     //host////path  # now path have four slashes
 
     Second way is wrong when we replace some parts:
 
-    # This is example of wrong behavior.
+    >>> # This is example of wrong behavior.
     >>> print URL("rel/path").replace(host='host').path
     rel/path  # path is relative even if host there
 
     So I divide all fixes to real fixes:
 
-    # path can not be relative when host present
+    >>> # path can not be relative when host present
     >>> print URL("rel/path").replace(host='host').path
     /rel/path
 
     And escapes which should be applied on recomposition:
 
-    # url starts with path can not contain ':' in first path segment
+    >>> # url starts with path can not contain ':' in first path segment
     >>> print URL(path="rel:path")
     ./rel:path
     >>> print URL(path="rel:path").path
@@ -369,7 +369,7 @@ And some other:
     ValueError: need more than 1 value to unpack
     >>> purl.URL('//host:/')
     ValueError: invalid literal for int() with base 10: ''
-    >>> purl.URL('//user:pa:word@host')
+    >>> purl.URL('//user:pass:word@host')
     ValueError: too many values to unpack
 
 *   Purl loses path after ';'. While ';' is valid char in url:
@@ -452,8 +452,17 @@ marker.
 Changelog
 ---------
 
-v.0.10
-~~~~~~
+v0.11
+~~~~~
+
+* decode() method
+* username and authorization properties
+* order of tuple members now same as url parts:
+  scheme, userinfo, host, port, path, query, fragment
+* raw url parsing was moved to split_url() function of utils module
+
+v0.10
+~~~~~
 
 * method replace_from() removed
 * concatenation with string no longer aliasd with join
