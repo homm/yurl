@@ -452,6 +452,11 @@ marker.
 Changelog
 ---------
 
+v0.12
+~~~~~
+
+* added URLError exception on top of ValueError
+
 v0.11
 ~~~~~
 

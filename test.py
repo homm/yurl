@@ -444,7 +444,7 @@ class InterfaceTests(unittest.TestCase):
             @:@:7 @@7:7: @@7:7:7 @@7:: @@7::7 @@:7: @@:7:7 @@::7""".split()
 
         for case in cases:
-            url = URL('//' + ''.join(case))
+            url = URL('//' + case)
             # check is all parts defined in original url is defined in parsed
             self.assertEqual(url, URL(url.as_string()))
             self.assertEqual(url, URL('//' + url.authority))

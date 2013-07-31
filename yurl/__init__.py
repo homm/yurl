@@ -9,12 +9,13 @@ from .utils import (_restore, split_url, decode_url, decode_url_component,
 
 # Validation errors.
 
-class InvalidScheme(ValueError): pass
-class InvalidAuthority(ValueError): pass
+class URLError(ValueError): pass
+class InvalidScheme(URLError): pass
+class InvalidAuthority(URLError): pass
 class InvalidUserinfo(InvalidAuthority): pass
 class InvalidHost(InvalidAuthority): pass
-class InvalidPath(ValueError): pass
-class InvalidQuery(ValueError): pass
+class InvalidPath(URLError): pass
+class InvalidQuery(URLError): pass
 
 
 URLTuple = namedtuple('URLBase', 'scheme userinfo host port '

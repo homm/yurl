@@ -22,7 +22,6 @@ _split_re = re.compile(r'''
 
 
 def split_url(url):
-    # All other arguments are ignored.
     groups = _split_re(url).groups('')
 
     # Host itself can contain digits and ':', so we cant use regexp.
