@@ -452,6 +452,11 @@ marker.
 Changelog
 ---------
 
+v0.13
+~~~~~
+
+* fixed installation on not utf-8 systems
+
 v0.12
 ~~~~~
 
