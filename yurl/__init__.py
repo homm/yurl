@@ -280,7 +280,7 @@ class URL(URLTuple):
             userinfo, host, port = URL('//' + authority)[1:4]
 
         if full_path is not None:
-            if path or query or fragment:
+            if any(i is not None for i in [path, query, fragment]):
                 raise TypeError()
 
             # Use original URL just for parse.
