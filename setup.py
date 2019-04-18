@@ -6,7 +6,7 @@ from setuptools import setup
 
 
 setup(name='YURL',
-      version='0.13',
+      version='1.0.0',
       description='Yurl is alternative url manipulation library',
       long_description=codecs.open('README.rst', 'r', 'utf-8').read(),
       author='Aleksadr Karpinsky',
