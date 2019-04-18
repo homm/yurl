@@ -2,10 +2,7 @@
 
 from __future__ import print_function, unicode_literals
 import sys
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 
 from yurl import (URL, InvalidScheme as Scheme, InvalidUserinfo as Userinfo,
                   InvalidHost as Host, InvalidPath as Path,
