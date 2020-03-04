@@ -63,7 +63,7 @@ Get information
 ---------------
 
 URL() returns named tuple with some additional properties. All properties
-is strings, even if they does not exists in url.
+are strings, even if they don't exists in the url.
 
 .scheme .authority .path .query .fragment
     Basic parts of url: *scheme://authority/path?query#fragment*
@@ -83,7 +83,7 @@ Url object has method for checking authority existence:
     >>> URL('http://google.com:80').has_authority()
     True
 
-Also you can check is url relative:
+Also you can check if url is relative:
 
     >>> URL('http://google.com:80').is_relative()
     False
@@ -97,7 +97,7 @@ Or have relative path:
     >>> URL('./path').is_relative_path()
     True
 
-You can also chech is url host is ip:
+You can also check if url host is an IP address:
 
     >>> URL('//127-0-0-1/').is_host_ip()
     False
@@ -108,7 +108,7 @@ You can also chech is url host is ip:
     >>> URL('//[::ae21:ad12]/').is_host_ipv4()
     False
 
-Ip does not validated, so it is recommended to use validate() method:
+Ip is not validated, so it is recommended to use validate() method:
 
     >>> URL('//[+ae21:ad12]/').is_host_ip()
     True
@@ -123,7 +123,7 @@ Ip does not validated, so it is recommended to use validate() method:
 Modify urls
 -----------
 
-After parsing url can be modified in different ways.
+After parsing, url can be modified in different ways.
 
 replace() method
 ~~~~~~~~~~~~~~~~
@@ -152,7 +152,7 @@ setdefault() replace parts with given if they don't exists in original url:
 Url join
 ~~~~~~~~
 
-Join is analogue of urljoin() function from urlparse module. You can join two
+Join is analogue to urljoin() function from urlparse module. You can join two
 urls by adding one to another.
 
     >>> print URL('http://ya.ru/path#chap2') + URL('seqrch?q=some')
@@ -163,7 +163,7 @@ Join for relative urls is also supported:
     >>> print URL('path/to/object#chap2') + URL('../from/object')
     path/from/object
 
-Join is not commutative operation:
+Join is not a commutative operation:
 
     >>> print URL('../from/object') + URL('path/to/object#chap2')
     from/path/to/object#chap2
@@ -179,7 +179,7 @@ And not associative in general:
 Decode url
 ----------
 
-All chars in url is divided to three groups: delimeters, subdelimeters and
+All chars in url are divided in three groups: delimeters, subdelimeters and
 unreserved chars. Unreserved chars do not affect the parsing and can be encoded
 or decoded at any time. To decode unreserved chars you can call decode()
 method. Defaul encoding is utf-8.
@@ -223,8 +223,8 @@ Decisions
 ---------
 
 Rfc define format of valid url and ways to interact with it. But sometimes we
-need to interact invalid urls. And RFC's not much help with it. So this library
-has lots of decisions.
+need to interact with invalid urls. And RFC's not much help with it. So this 
+library took many decisions.
 
 *   Many libraries do not allow scheme or authority with invalid chars. Rfc
     unambiguously define format of this parts. So we can say 'sche_me:path'
@@ -282,14 +282,14 @@ response.
     urlsplit(), urlparse() separates params from path. Params is not part of
     most schemas and in last rfc is not part of url at all. Instead of this
     each path segment can have own params. The problem is that most programmers
-    use urlparse() and ignore params when extract path:
+    use urlparse() and ignore params when extracting path:
 
     >>> import purl
     >>> print purl.URL('/path;with?semicolon')
     /path?semicolon
 
 *   urlsplit() has strange parameters. It takes default addressing scheme.
-    But scheme is only can have default value in urlsplit().
+    But scheme can only have default value in urlsplit().
 
 *   Another parameter allow_fragments can be used to prevent splitting
     #fragment from path. The problem is that we can't say «I do not want
@@ -322,7 +322,7 @@ response.
     >>> urlsplit('//butterflies[]:80').port
     80
 
-*   It don't understend my favorite scheme:
+*   It doesn't understand my favorite scheme:
 
     >>> urlsplit('lucky-number:33')[:]
     ('', '', 'lucky-number:33', '', '')
@@ -334,7 +334,7 @@ response.
     >>> urlsplit(urlsplit('////path').geturl())[:]
     ('', 'path', '', '', '')
 
-*   Function urljoin() broken sometimes:
+*   Function urljoin() is sometimes broken:
 
     >>> urljoin('http://host/', '../')
     'http://host/../'
