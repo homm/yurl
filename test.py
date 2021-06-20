@@ -352,6 +352,17 @@ class InterfaceTests(unittest.TestCase):
             url = url.replace(full_path=orig_path)
             self.assertEqual(url.full_path, orig_path)
 
+        # cannot combine full_path with its components
+        url = URL('a://b')
+        for component in ['path', 'query', 'fragment']:
+            kwargs = {component: 'other'}
+            self.assertRaises(TypeError, url.replace, full_path='c?d#e', 
+                              **kwargs)
+
+        # the above check applies to the empty string
+        self.assertRaises(TypeError, url.replace, full_path='c?d#e',
+                          fragment='')
+
     def test_setdefault(self):
         empty = URL()
         full1 = URL('scheme://user@host:80/path?query#frgment')
